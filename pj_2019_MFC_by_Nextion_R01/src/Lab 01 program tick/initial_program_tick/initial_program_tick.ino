@@ -1,28 +1,40 @@
 // -----------------------------------
 // CPU tick
 // -----------------------------------
-#define INTERVAL         10 // ms
+#define INTERVAL         50 // ms
 unsigned long previousMillis;
 boolean       tick_state;
 
 // -----------------------------------
 // TASK BLINK
 // -----------------------------------
-#define TIME_BLINK     1000 // ms
+#define TIME_BLINK     1000 // ms = 20 * 50ms ตั้งเวลา
 boolean Blink = false; // ใช้จำสถานะไฟกระพริบ
-int taskBlink_CNT;
+int taskBlink_CNT; // จำเวลา [1,20] / C++[0,19]
 
-void setup() 
+// ---------------------------------
+// Mission Print
+// ---------------------------------
+#define TIME_PRINT    2000
+int missionPrint_CNT;
+
+void setup()
 {
-  // put your setup code here, to run once:
+  Serial.begin(9600);
+  pinMode(13, OUTPUT); // put your setup code here, to run once:
 
 }
 
-void loop() 
+void loop()
 {
-	tick();
-	
-	taskBlink(tick_state);
+  tick();
+
+  //Mission
+  missionPrint(tick_state);
+  taskBlink(tick_state);
+
+
+  delay(1);
 }
 
 // ================================= PROCEDURES =========================================
@@ -32,9 +44,9 @@ void loop()
 void tick()
 {
   tick_state = false;
-  if(millis() - previousMillis > INTERVAL)
-  {       
-    previousMillis = millis();    
+  if (millis() - previousMillis > INTERVAL) //50ms  ___|^^^
+  {
+    previousMillis = millis();
     tick_state = true;
   }
 }
@@ -44,22 +56,41 @@ void tick()
 // -----------------------------------
 void taskBlink(boolean _flag)
 {
-  if(_flag)
+  if (_flag)
   {
     taskBlink_CNT++;
-    if(taskBlink_CNT > TIME_BLINK/INTERVAL)
+    if (taskBlink_CNT >= TIME_BLINK / INTERVAL) //1000ms/50ms = 20 counts ==> 1000 ms
     {
-      taskBlink_CNT = 0; // Reset counter <-- 
-      if(!Blink)
-      {      
+      taskBlink_CNT = 0; // Reset counter <--
+
+      // led Mission
+      if (!Blink)
+      {
         //LED ON
-        Blink=true;
+        digitalWrite(13, HIGH);
+        Blink = true;
       }
       else
-      {      
+      {
         //LED OFF
-        Blink=false;
+        digitalWrite(13, LOW);
+        Blink = false;
       }
     }
-  }  
+  }
+}
+
+void missionPrint(boolean _flag)
+{
+  if (_flag)
+  {
+    missionPrint_CNT++;
+
+    if (TIME_PRINT/INTERVAL <= missionPrint_CNT)
+    {
+      missionPrint_CNT = 0;
+
+      Serial.println("HI");
+    }
+  }
 }
