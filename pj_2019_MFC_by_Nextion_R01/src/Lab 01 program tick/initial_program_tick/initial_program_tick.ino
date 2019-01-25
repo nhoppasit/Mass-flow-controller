@@ -4,6 +4,7 @@
 #define INTERVAL         50 // ms
 unsigned long previousMillis;
 boolean       tick_state;
+int button =12;
 
 // -----------------------------------
 // TASK BLINK
@@ -22,6 +23,7 @@ void setup()
 {
   Serial.begin(9600);
   pinMode(13, OUTPUT); // put your setup code here, to run once:
+  pinMode(12,INPUT_PULLUP);
 
 }
 
@@ -56,6 +58,7 @@ void tick()
 // -----------------------------------
 void taskBlink(boolean _flag)
 {
+  if(digitalRead(button)==0){
   if (_flag)
   {
     taskBlink_CNT++;
@@ -78,6 +81,7 @@ void taskBlink(boolean _flag)
       }
     }
   }
+}
 }
 
 void missionPrint(boolean _flag)
