@@ -4,7 +4,13 @@
 #define INTERVAL         50 // ms
 unsigned long previousMillis;
 boolean       tick_state;
+
+// -----------------------------------
+// Button Set
+// -----------------------------------
+#define TIME_BUTTON 500
 int button =12;
+int buttonSet_CNT;
 
 // -----------------------------------
 // TASK BLINK
@@ -19,11 +25,12 @@ int taskBlink_CNT; // จำเวลา [1,20] / C++[0,19]
 #define TIME_PRINT    2000
 int missionPrint_CNT;
 
+
 void setup()
 {
   Serial.begin(9600);
   pinMode(13, OUTPUT); // put your setup code here, to run once:
-  pinMode(12,INPUT_PULLUP);
+  pinMode(12, INPUT_PULLUP);
 
 }
 
@@ -34,7 +41,7 @@ void loop()
   //Mission
   missionPrint(tick_state);
   taskBlink(tick_state);
-
+  buttonSet(tick_state);
 
   delay(1);
 }
@@ -58,7 +65,6 @@ void tick()
 // -----------------------------------
 void taskBlink(boolean _flag)
 {
-  if(digitalRead(button)==0){
   if (_flag)
   {
     taskBlink_CNT++;
@@ -82,7 +88,6 @@ void taskBlink(boolean _flag)
     }
   }
 }
-}
 
 void missionPrint(boolean _flag)
 {
@@ -96,5 +101,18 @@ void missionPrint(boolean _flag)
 
       Serial.println("HI");
     }
+  }
+}
+void buttonSet(boolean _flag)
+{
+  if (_flag)
+  {
+    buttonSet_CNT++;
+
+     if (buttonSet_CNT >= TIME_BUTTON / INTERVAL)
+     {
+      buttonSet_CNT =0 ; 
+      tick_state=0;     
+     }
   }
 }
