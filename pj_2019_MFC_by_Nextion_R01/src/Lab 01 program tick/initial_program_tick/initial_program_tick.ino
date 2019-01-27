@@ -8,9 +8,8 @@ boolean       tick_state;
 // -----------------------------------
 // Button Set
 // -----------------------------------
-#define TIME_BUTTON 500
-int button =12;
-int buttonSet_CNT;
+#define IN_BUTTON 4
+int val = 0;
 
 // -----------------------------------
 // TASK BLINK
@@ -30,7 +29,7 @@ void setup()
 {
   Serial.begin(9600);
   pinMode(13, OUTPUT); // put your setup code here, to run once:
-  pinMode(12, INPUT_PULLUP);
+  pinMode(IN_BUTTON,INPUT);
 
 }
 
@@ -59,7 +58,18 @@ void tick()
     tick_state = true;
   }
 }
-
+void buttonSet(boolean _flag)
+{
+  val = digitalRead (IN_BUTTON); //อ่านค่าvalueในinput
+  if(val==HIGH) // เช็คinput เป็น High
+  {
+    analogWrite (13,255);  //analogWrite values from 0 to 255
+  }
+  else
+  {
+    analogWrite(13,64);
+  }
+}
 // -----------------------------------
 // TK01 = Blink
 // -----------------------------------
@@ -101,18 +111,5 @@ void missionPrint(boolean _flag)
 
       Serial.println("HI");
     }
-  }
-}
-void buttonSet(boolean _flag)
-{
-  if (_flag)
-  {
-    buttonSet_CNT++;
-
-     if (buttonSet_CNT >= TIME_BUTTON / INTERVAL)
-     {
-      buttonSet_CNT =0 ; 
-      tick_state=0;     
-     }
   }
 }
