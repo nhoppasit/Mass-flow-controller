@@ -8,8 +8,9 @@ boolean       tick_state;
 // -----------------------------------
 // Button Set
 // -----------------------------------
-#define IN_BUTTON 4
+#define IN_BUTTON 4 //เลือกขาของสวิตซ์
 int val = 0;
+int P;
 
 // -----------------------------------
 // TASK BLINK
@@ -63,11 +64,16 @@ void buttonSet(boolean _flag)
   val = digitalRead (IN_BUTTON); //อ่านค่าvalueในinput
   if(val==HIGH) // เช็คinput เป็น High
   {
-    analogWrite (13,255);  //analogWrite values from 0 to 255
+   for(P=0;P<=255;P=P+5)
+    {
+     //analogWrite (13,255); //ให้ส่งสัญญาณพัลส์ที่มีความกว้างของสัญญาณพัลส์ 100% ซึ่งเป็นค่าสูงสุด ออกที่led ขา 13
+     analogWrite (13,P);
+     delay(50);
+    }
   }
   else
   {
-    analogWrite(13,64);
+    analogWrite(13,0); //ให้ส่งสัญญาณพัลส์ที่มีความกว้างของสัญญาณพัลส์ 0% ออกที่led ขา 13
   }
 }
 // -----------------------------------
