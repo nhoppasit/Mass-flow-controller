@@ -14,23 +14,23 @@ int CurrentPage = 0;  // Create a variable to store which page is currently load
 
 
 // Declare objects that we are going to read from the display. This includes buttons, sliders, text boxes, etc:
-NexButton b1 = NexButton(0, 9, "b1");  // Button added
-NexButton b0 = NexButton(0, 1, "b0");  // Button added
+NexButton b1 = NexButton(0, 6, "b1");  // Button added
+NexButton b0 = NexButton(0, 5, "b0");  // Button added
 NexButton b4 = NexButton(0, 11, "b4");  // Button added
 NexDSButton bt0 = NexDSButton(0, 8, "bt0");  // Dual state button added
-NexSlider h0 = NexSlider(0, 4, "h0");  // Slider added
-NexText t5 = NexText(2, 12, "t5");  // Text box added, so we can read it
-NexText t6 = NexText(2, 13, "t6");  // Text box added, so we can read it
-NexText t7 = NexText(2, 14, "t7");  // Text box added, so we can read it
-NexRadio r0 = NexRadio(2, 4, "r0");  // Radio checkbox added
-NexRadio r1 = NexRadio(2, 5, "r1");  // Radio checkbox added
-NexRadio r2 = NexRadio(2, 6, "r2");  // Radio checkbox added
+NexSlider h0 = NexSlider(0, 10, "h0");  // Slider added
+NexText t5 = NexText(2, 13, "t5");  // Text box added, so we can read it
+NexText t6 = NexText(2, 14, "t6");  // Text box added, so we can read it
+NexText t7 = NexText(2, 15, "t7");  // Text box added, so we can read it
+NexRadio r0 = NexRadio(2, 10, "r0");  // Radio checkbox added
+NexRadio r1 = NexRadio(2, 11, "r1");  // Radio checkbox added
+NexRadio r2 = NexRadio(2, 12, "r2");  // Radio checkbox added
 NexCheckbox c0 = NexCheckbox(2, 3, "c0");  // Checkbox added
-NexButton j0 = NexButton(2, 2, "j0");  // Progress bar as a button added, so if we press the progress bar we can create an action
-NexButton b21 = NexButton(2, 10, "b21");  // Button added
-NexButton b22 = NexButton(2, 16, "b22");  // Button added
-NexButton b23 = NexButton(2, 18, "b23");  // Button added
-NexButton b24 = NexButton(2, 19, "b24");  // Button added
+NexButton j0 = NexButton(2, 5, "j0");  // Progress bar as a button added, so if we press the progress bar we can create an action
+NexButton b21 = NexButton(2, 17, "b21");  // Button added
+NexButton b22 = NexButton(2, 7, "b22");  // Button added
+NexButton b23 = NexButton(2, 8, "b23");  // Button added
+NexButton b24 = NexButton(2, 9, "b24");  // Button added
 
 // Declare pages:
 NexPage page0 = NexPage(0, 0, "page0");  // Page added as a touch event
@@ -377,17 +377,10 @@ void setup() {  // Put your setup code here, to run once:
   
   Serial.begin(9600);  // Start serial comunication at baud=9600
 
-
   // I am going to change the Serial baud to a faster rate.
-  // The reason is that the slider have a glitch when we try to read it's value.
-  // One way to solve it was to increase the speed of the serial port.
   delay(500);  // This dalay is just in case the nextion display didn't start yet, to be sure it will receive the following command.
+	//
   Serial.print("baud=115200");  // Set new baud rate of nextion to 115200, but it's temporal. Next time nextion is power on,
-                                // it will retore to default baud of 9600.
-                                // To take effect, make sure to reboot the arduino (reseting arduino is not enough).
-                                // If you want to change the default baud, send the command as "bauds=115200", instead of "baud=115200".
-                                // If you change the default baud, everytime the nextion is power ON is going to have that baud rate, and
-                                // would not be necessery to set the baud on the setup anymore.
   Serial.write(0xff);  // We always have to send this three lines after each command sent to nextion.
   Serial.write(0xff);
   Serial.write(0xff);
