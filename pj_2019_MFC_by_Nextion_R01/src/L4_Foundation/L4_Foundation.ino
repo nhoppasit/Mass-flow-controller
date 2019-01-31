@@ -1,3 +1,5 @@
+#define PRINT_NEXTION_COMMU 0
+
 //##############################################################################
 //                             DECLARATIONS
 //##############################################################################
@@ -92,23 +94,28 @@ void listenNextion()
   if (Serial1.available()) 
   {
     incomingChar = Serial1.read();
-	
+
+#if PRINT_NEXTION_COMMU	
 	Serial.print("Incoming Char = ");
     Serial.println(incomingChar);
 	Serial.print("Incoming Byte = ");
     Serial.println((byte)incomingChar, HEX);
+#endif
 
 	if(incomingChar==0x65) 
 	{
-		Serial.println();
 		
 		nextionStxCome = true;
 		nextionEtxCome = false;
 		byteIdx = 0;
+
+#if PRINT_NEXTION_COMMU	
+		Serial.println();
 		Serial.println("STX Come........................."); 
 		Serial.println("Reset ETX Come."); 
 		Serial.println("Reset byte IDX to zero."); 
 		Serial.println();
+#endif
 		
 		return;
 	}
@@ -116,9 +123,12 @@ void listenNextion()
 	if(nextionStxCome)
 	{
 		dataBuff[byteIdx] = (byte)incomingChar;		
+
+#if PRINT_NEXTION_COMMU	
 		Serial.print("Data stored at byte IDX = "); 
 		Serial.println(byteIdx, DEC);				
 		Serial.println();
+#endif
 	}
 	
 	if(byteIdx==5)
@@ -126,8 +136,11 @@ void listenNextion()
 		if(dataBuff[3]==0xFF && dataBuff[4]==0xFF && dataBuff[5]==0xFF)
 		{
 			nextionEtxCome = true;
+
+#if PRINT_NEXTION_COMMU	
 			Serial.println("ETX Come........................."); 
 			Serial.println();
+#endif
 		}
 	}
 	
@@ -138,7 +151,7 @@ void listenNextion()
 }
 
 // ----------------------------------------------------------------------
-// Task Blink
+// Task resetNextionEtxCome
 // ----------------------------------------------------------------------
 void resetNextionEtxCome()
 {
