@@ -4,14 +4,14 @@
 // ----------------------------------------------------------------------
 // CPU tick
 // ----------------------------------------------------------------------
-#define INTERVAL         50 // ms
+#define INTERVAL         10 // ms
 unsigned long previousMillis;
 boolean       tick_state;
 
 // ----------------------------------------------------------------------
 // TASK BLINK
 // ----------------------------------------------------------------------
-#define TIME_BLINK     1000 // ms = 20 * 50ms ตั้งเวลา
+#define TIME_BLINK     1000 // ms = 100 * 10ms ตั้งเวลา
 int MY_TIME_BLINK = 1000;
 boolean Blink = false; // ใช้จำสถานะไฟกระพริบ
 int taskBlink_CNT; // จำเวลา [1,20] / C++[0,19]
@@ -21,7 +21,7 @@ int taskBlink_CNT; // จำเวลา [1,20] / C++[0,19]
 // ----------------------------------------------------------------------
 char incomingChar;
 int byteIdx;
-boolean stxCome, etxCome;
+boolean nextionStxCome, nextionEtxCome;
 byte dataBuff[6];
 
 
@@ -29,7 +29,7 @@ byte dataBuff[6];
 //                             SETUP
 //##############################################################################
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   delay(500);
   Serial1.begin(9600);
   delay(500);
@@ -48,12 +48,23 @@ void setup() {
 //##############################################################################
 void loop()
 {
-  listenNextion();
-  tick();
+	// ............................
+	// LISTEN & TICK
+	// ............................
+	listenNextion();
+	tick();
 
-  //Mission
-  taskBlink(tick_state);
-  //taskDAC(l.......);
+	// ............................
+	// TIME-BASED MISSIONS
+	// ............................
+	taskBlink(tick_state);
+
+	// ............................
+	// NEXTION MISSIONS
+	// ............................
+	taskIncBlinkPeriod(nextionEtxCome && dataBuff[1]==0x06 && dataBuff[2]==0x01);	
+	taskDecBlinkPeriod(nextionEtxCome && dataBuff[1]==0x07 && dataBuff[2]==0x01);
+	resetNextionEtxCome();	
 
 }
 
@@ -66,7 +77,7 @@ void loop()
 void tick()
 {
   tick_state = false;
-  if (millis() - previousMillis > INTERVAL) //50ms  ___|^^|_50ms__|^^|___
+  if (millis() - previousMillis > INTERVAL) //50ms  ___|^^|_____10ms____|^^|___
   {
     previousMillis = millis();
     tick_state = true;
@@ -91,8 +102,8 @@ void listenNextion()
 	{
 		Serial.println();
 		
-		stxCome = true;
-		etxCome = false;
+		nextionStxCome = true;
+		nextionEtxCome = false;
 		byteIdx = 0;
 		Serial.println("STX Come........................."); 
 		Serial.println("Reset ETX Come."); 
@@ -102,7 +113,7 @@ void listenNextion()
 		return;
 	}
 	
-	if(stxCome)
+	if(nextionStxCome)
 	{
 		dataBuff[byteIdx] = (byte)incomingChar;		
 		Serial.print("Data stored at byte IDX = "); 
@@ -114,7 +125,7 @@ void listenNextion()
 	{
 		if(dataBuff[3]==0xFF && dataBuff[4]==0xFF && dataBuff[5]==0xFF)
 		{
-			etxCome = true;
+			nextionEtxCome = true;
 			Serial.println("ETX Come........................."); 
 			Serial.println();
 		}
@@ -129,12 +140,22 @@ void listenNextion()
 // ----------------------------------------------------------------------
 // Task Blink
 // ----------------------------------------------------------------------
+void resetNextionEtxCome()
+{
+	nextionEtxCome = false;
+	Serial.println("Reset ETX. Command expired.");
+	Serial.println();
+}
+
+// ----------------------------------------------------------------------
+// Task Blink
+// ----------------------------------------------------------------------
 void taskBlink(boolean _flag)
 {
   if (_flag)
   {
     taskBlink_CNT++;
-    if (taskBlink_CNT >= MY_TIME_BLINK / INTERVAL) //1000ms/50ms = 20 counts ==> 1000 ms
+    if ((MY_TIME_BLINK / INTERVAL) <= taskBlink_CNT) //1000ms/10ms = 100 counts ==> 1000 ms
     {
       taskBlink_CNT = 0; // Reset counter <--
 
@@ -154,3 +175,34 @@ void taskBlink(boolean _flag)
     }
   }
 }
+
+// ----------------------------------------------------------------------
+// Task เพิ่มคาบเวลาในการ Blink
+// ----------------------------------------------------------------------
+void taskIncBlinkPeriod(boolean _flag)
+{
+	if(_flag)
+	{
+		MY_TIME_BLINK = MY_TIME_BLINK + 50;
+		if(2000<MY_TIME_BLINK) MY_TIME_BLINK = 2000;
+		Serial.print("Increase MY_TIME_BLINK to ");
+		Serial.print(MY_TIME_BLINK, DEC);
+		Serial.println();
+	}
+}
+
+// ----------------------------------------------------------------------
+// Task ลดคาบเวลาในการ Blink
+// ----------------------------------------------------------------------
+void taskDecBlinkPeriod(boolean _flag)
+{
+	if(_flag)
+	{
+		MY_TIME_BLINK = MY_TIME_BLINK - 50;
+		if(MY_TIME_BLINK<50) MY_TIME_BLINK = 50;
+		Serial.print("Decrease MY_TIME_BLINK to ");
+		Serial.print(MY_TIME_BLINK, DEC);
+		Serial.println();
+	}
+}
+
