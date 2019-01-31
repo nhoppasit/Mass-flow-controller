@@ -142,9 +142,12 @@ void listenNextion()
 // ----------------------------------------------------------------------
 void resetNextionEtxCome()
 {
-	nextionEtxCome = false;
-	Serial.println("Reset ETX. Command expired.");
-	Serial.println();
+	if(nextionEtxCome)
+	{
+		nextionEtxCome = false;
+		Serial.println("Reset ETX. Command expired.");
+		Serial.println();
+	}	
 }
 
 // ----------------------------------------------------------------------
