@@ -1,3 +1,6 @@
+//##############################################################################
+//                             DECLARATIONS
+//##############################################################################
 // -----------------------------------
 // CPU tick
 // -----------------------------------
@@ -13,14 +16,18 @@ int MY_TIME_BLINK = 1000;
 boolean Blink = false; // ใช้จำสถานะไฟกระพริบ
 int taskBlink_CNT; // จำเวลา [1,20] / C++[0,19]
 
-// Serial command
-char inBuff;
+// -----------------------------------
+// Serial communication variables
+// -----------------------------------
+char incomingChar;
+int byteIdx;
+boolean stxCome;
+byte inBuff[4];
 
 
-
-
-
-
+//##############################################################################
+//                             SETUP
+//##############################################################################
 void setup() {
   Serial.begin(9600);
   delay(500);
@@ -29,15 +36,19 @@ void setup() {
 
   pinMode(13, OUTPUT);
 
-  Serial.print("Hello");
-  Serial1.print("Hello");
+  Serial.print("Software started. Hello PC.");
+  
+  Serial1.print("Hello for test if you are Docklight.");
 
   digitalWrite(13, LOW);
 }
 
+//##############################################################################
+//                             LOOP
+//##############################################################################
 void loop()
 {
-  ListenSerial1();
+  listenNextion();
   tick();
 
   //Mission
@@ -46,41 +57,50 @@ void loop()
 
 }
 
+//##############################################################################
+//                             PROCEDURES OR FUNCTIONS
+//##############################################################################
+// -----------------------------------
+// Tick --> update tick_state
+// -----------------------------------
 void tick()
 {
   tick_state = false;
-  if (millis() - previousMillis > INTERVAL) //50ms  ___|^^^
+  if (millis() - previousMillis > INTERVAL) //50ms  ___|^^|_50ms__|^^|___
   {
     previousMillis = millis();
     tick_state = true;
   }
 }
 
-// Serial command
-void ListenSerial1()
+// -----------------------------------
+// Serial communication variables
+// -----------------------------------
+void listenNextion() 
 {
   if (Serial1.available()) 
   {
-    inBuff = Serial1.read();
-    Serial.print(inBuff);
+    incomingChar = Serial1.read();
+	
+    Serial.print(incomingChar);
 
-    //TODO
-    if(inBuff=='1') MY_TIME_BLINK = 1000;
-    if(inBuff=='2') MY_TIME_BLINK = 900;
-    if(inBuff=='3') MY_TIME_BLINK = 800;
-    if(inBuff=='4') MY_TIME_BLINK = 700;
-    if(inBuff=='5') MY_TIME_BLINK = 600;
-    if(inBuff=='6') MY_TIME_BLINK = 500;
-    if(inBuff=='7') MY_TIME_BLINK = 400;
-    if(inBuff=='8') MY_TIME_BLINK = 300;
-    if(inBuff=='9') MY_TIME_BLINK = 200;
-    if(inBuff=='0') MY_TIME_BLINK = 100;
+	if(incomingChar==0x65) 
+	{
+		Serial.println();
+		
+		stxCome = true;
+		Serial.println("STX Come."); 
+		
+		byteIdx = 0;
+		Serial.print("Byte IDX = "); 
+		
+	}
       
   }
 }
 
 // -----------------------------------
-// TK01 = Blink
+// Task Blink
 // -----------------------------------
 void taskBlink(boolean _flag)
 {
