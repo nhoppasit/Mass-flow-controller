@@ -1,28 +1,28 @@
 //##############################################################################
 //                             DECLARATIONS
 //##############################################################################
-// -----------------------------------
+// ----------------------------------------------------------------------
 // CPU tick
-// -----------------------------------
+// ----------------------------------------------------------------------
 #define INTERVAL         50 // ms
 unsigned long previousMillis;
 boolean       tick_state;
 
-// -----------------------------------
+// ----------------------------------------------------------------------
 // TASK BLINK
-// -----------------------------------
+// ----------------------------------------------------------------------
 #define TIME_BLINK     1000 // ms = 20 * 50ms ตั้งเวลา
 int MY_TIME_BLINK = 1000;
 boolean Blink = false; // ใช้จำสถานะไฟกระพริบ
 int taskBlink_CNT; // จำเวลา [1,20] / C++[0,19]
 
-// -----------------------------------
+// ----------------------------------------------------------------------
 // Serial communication variables
-// -----------------------------------
+// ----------------------------------------------------------------------
 char incomingChar;
 int byteIdx;
-boolean stxCome;
-byte inBuff[4];
+boolean stxCome, etxCome;
+byte dataBuff[6];
 
 
 //##############################################################################
@@ -60,9 +60,9 @@ void loop()
 //##############################################################################
 //                             PROCEDURES OR FUNCTIONS
 //##############################################################################
-// -----------------------------------
+// ----------------------------------------------------------------------
 // Tick --> update tick_state
-// -----------------------------------
+// ----------------------------------------------------------------------
 void tick()
 {
   tick_state = false;
@@ -73,35 +73,62 @@ void tick()
   }
 }
 
-// -----------------------------------
+// ----------------------------------------------------------------------
 // Serial communication variables
-// -----------------------------------
+// ----------------------------------------------------------------------
 void listenNextion() 
 {
   if (Serial1.available()) 
   {
     incomingChar = Serial1.read();
 	
-    Serial.print(incomingChar);
+	Serial.print("Incoming Char = ");
+    Serial.println(incomingChar);
+	Serial.print("Incoming Byte = ");
+    Serial.println((byte)incomingChar, HEX);
 
 	if(incomingChar==0x65) 
 	{
 		Serial.println();
 		
 		stxCome = true;
-		Serial.println("STX Come."); 
-		
+		etxCome = false;
 		byteIdx = 0;
-		Serial.print("Byte IDX = "); 
+		Serial.println("STX Come........................."); 
+		Serial.println("Reset ETX Come."); 
+		Serial.println("Reset byte IDX to zero."); 
+		Serial.println();
 		
+		return;
 	}
-      
+	
+	if(stxCome)
+	{
+		dataBuff[byteIdx] = (byte)incomingChar;		
+		Serial.print("Data stored at byte IDX = "); 
+		Serial.println(byteIdx, DEC);				
+		Serial.println();
+	}
+	
+	if(byteIdx==5)
+	{
+		if(dataBuff[3]==0xFF && dataBuff[4]==0xFF && dataBuff[5]==0xFF)
+		{
+			etxCome = true;
+			Serial.println("ETX Come........................."); 
+			Serial.println();
+		}
+	}
+	
+	byteIdx++;
+	if(5<byteIdx) byteIdx=5;
+
   }
 }
 
-// -----------------------------------
+// ----------------------------------------------------------------------
 // Task Blink
-// -----------------------------------
+// ----------------------------------------------------------------------
 void taskBlink(boolean _flag)
 {
   if (_flag)
