@@ -78,7 +78,8 @@ __return:
  * @param timeout - set timeout time. 
  *
  * @return the length of string buffer.
- *
+ * Example:
+ * 
  */
 uint16_t recvRetString(char *buffer, uint16_t len, uint32_t timeout)
 {
@@ -204,16 +205,16 @@ bool recvRetCommandFinished(uint32_t timeout)
 
 bool systemInit(void)
 {
-    bool ret1 = false;
-    bool ret2 = false;
-    
+	bool ret1 = false;
+	bool ret2 = false;
+	
 	Serial.begin(9600);
-    Serial1.begin(9600);
-    sendCommand("");
-    sendCommand("bkcmd=1");
-    ret1 = recvRetCommandFinished();
-    sendCommand("page 0");
-    ret2 = recvRetCommandFinished();
-    return ret1 && ret2;
+	Serial1.begin(9600);
+	sendCommand("");
+	sendCommand("bkcmd=1");
+	ret1 = recvRetCommandFinished();
+	sendCommand("page 0");
+	ret2 = recvRetCommandFinished();
+	return ret1 && ret2;
 }
 

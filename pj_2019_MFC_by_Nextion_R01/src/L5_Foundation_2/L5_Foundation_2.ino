@@ -4,6 +4,7 @@
 //                             DECLARATIONS
 //##############################################################################
 #include "NextionHardware.h";
+#include "NextionText.h";
 
 // ----------------------------------------------------------------------
 // CPU tick
@@ -27,6 +28,11 @@ char incomingChar;//หน่วยความจำ
 int byteIdx;
 boolean nextionStxCome, nextionEtxCome;
 byte dataBuff[6];
+
+// ----------------------------------------------------------------------
+// Nextion variables
+// ----------------------------------------------------------------------
+char buffer[100] = {0};
 
 //##############################################################################
 //                             SETUP
@@ -76,29 +82,13 @@ void checkScaling(boolean _flag)
 {
   if (_flag)
   {
-    Serial.println("Ask.");
-    Serial1.print("get t61.txt");
-    Serial1.write(0xFF);
-    Serial1.write(0xFF);
-    Serial1.write(0xFF);
-    delay(100);
-    Serial.print((char)Serial1.read());
-    delay(10);
-    Serial.print((char)Serial1.read());
-    delay(10);
-    Serial.print((char)Serial1.read());
-    delay(10);
-    Serial.print((char)Serial1.read());
-    delay(10);
-    Serial.print((char)Serial1.read());
-    delay(10);
-    Serial.print((char)Serial1.read());
-    delay(10);
-    Serial.print((char)Serial1.read());
-    delay(10);
-    Serial.print((char)Serial1.read());
-    delay(10);
-    Serial.print("End ask.");
+		Serial.println();
+    Serial.println("Ask entry scale.");
+    
+		memset(buffer, 0, sizeof(buffer));
+		getText("t61", buffer, sizeof(buffer));
+		
+    Serial.println("End ask.");
   }
 }
 
