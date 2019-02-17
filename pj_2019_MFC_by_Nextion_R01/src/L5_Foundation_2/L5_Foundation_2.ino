@@ -87,12 +87,11 @@ void checkScaling(boolean _flag)
 
     memset(buffer, 0, sizeof(buffer));
     getText("t61", buffer, sizeof(buffer));
-		
-		callPage("3");
-		
-		setText("t21","Hi");
-		
-		
+
+    callPage("3");
+
+    setText("t21", "Hi");
+
     Serial.println("End ask.");
   }
 }
