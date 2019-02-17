@@ -82,11 +82,16 @@ void checkScaling(boolean _flag)
 {
   if (_flag)
   {
-		Serial.println();
+    Serial.println();
     Serial.println("Ask entry scale.");
-    
-		memset(buffer, 0, sizeof(buffer));
-		getText("t61", buffer, sizeof(buffer));
+
+    memset(buffer, 0, sizeof(buffer));
+    getText("t61", buffer, sizeof(buffer));
+		
+		callPage("3");
+		
+		setText("t21","Hi");
+		
 		
     Serial.println("End ask.");
   }
