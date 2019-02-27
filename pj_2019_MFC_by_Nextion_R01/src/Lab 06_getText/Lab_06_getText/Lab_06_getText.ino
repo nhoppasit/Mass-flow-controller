@@ -86,12 +86,12 @@ void checkScaling(boolean _flag)
     Serial.println("Ask entry scale.");
 
     //memset(buffer, 0, sizeof(buffer));
-	//getText("t61", buffer, sizeof(buffer));
+	  //getText("t61", buffer, sizeof(buffer));
     
-    //callPage("0"); //โชว์หน้า 0
+    //callPage("14"); //โชว์หน้า 0
 	
     setText("t21", "Hi!"); //Show "Hi" ที่textbox 21
-	setText("t22", "Yo!");
+	  setText("t22", "Yo!");
 			
     Serial.println("End ask.");  
   }
@@ -104,10 +104,23 @@ void testTextbox(boolean _flag)
 		Serial.println("check textbox");
 		memset(buffer, 0, sizeof(buffer));
 		getText("t61", buffer, sizeof(buffer));
-        //Serial.print((char)Serial1.read(),DEC); 
-		Serial.print((int)Serial1.read()); 
-		
-		setText("t102", "15");
+    //Serial.print(Serial1.readBytes(buffer,sizeof(buffer,DEC)));
+    //Serial.print((char)Serial1.read(),DEC); 
+		//Serial.print((int)Serial1.read()); 
+
+   if (strcmp(buffer,DEC))//เป็นฟังก์ชันที่ใช้เปรียบเทียบข้อมูลชนิดสตริง2ค่า ซึ่งการเปรียบเทียบสตริงจะใช้ค่ารหัส ASCII เปรียบเทียบทีละตัวอักขระ
+    {
+        digitalWrite(13, HIGH);
+        strcpy(buffer, DEC);// เป็นฟังก์ชันที่ใช้คัดลอกข้อมูลจาก string ค่าหนึ่งไปยัง string อีกค่าหนึ่ง
+    }
+    /* else
+    {
+        digitalWrite(13, LOW);
+        strcpy(buffer,DEC);
+    }
+    */
+		setText("t101", buffer);
+    setText("t102","35" );
 		Serial.println("Finish");
 	}
 }
