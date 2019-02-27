@@ -7,7 +7,8 @@ uint16_t getText(const char *objName, char *buffer, uint16_t len)
     cmd += objName;
     cmd += ".txt";
     sendCommand(cmd.c_str());
-    return recvRetString(buffer,len);
+    //return recvRetString2(buffer,len);
+	return recvRetCommandFinished();
 }
 
 bool setText(const char *objName, const char *buffer)

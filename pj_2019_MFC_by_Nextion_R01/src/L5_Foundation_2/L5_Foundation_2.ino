@@ -33,6 +33,8 @@ byte dataBuff[6];
 // Nextion variables
 // ----------------------------------------------------------------------
 char buffer[100] = {0};
+//float FULLSC;
+//float SETP;
 
 //##############################################################################
 //                             SETUP
@@ -69,10 +71,10 @@ void loop()
   // ............................
   // NEXTION MISSIONS
   // ............................
-  taskIncBlinkPeriod(nextionEtxCome && dataBuff[0] == 0x01 && dataBuff[1] == 0x02 && dataBuff[2] == 0x00);
-  taskDecBlinkPeriod(nextionEtxCome && dataBuff[0] == 0x02 && dataBuff[1] == 0x02 && dataBuff[2] == 0x00);
+  //taskIncBlinkPeriod(nextionEtxCome && dataBuff[0] == 0x01 && dataBuff[1] == 0x02 && dataBuff[2] == 0x00);
+  //taskDecBlinkPeriod(nextionEtxCome && dataBuff[0] == 0x02 && dataBuff[1] == 0x02 && dataBuff[2] == 0x00);
 
-  checkScaling(nextionEtxCome && dataBuff[0] == 0x06 && dataBuff[1] == 0x05 && dataBuff[2] == 0x00); // 65 06 05 00 FF FF FF
+  checkScaling(nextionEtxCome && dataBuff[0] == 0x06 && dataBuff[1] == 0x05 && dataBuff[2] == 0x00); // 65 06 05 00 FF FF FF ปุ่ม next ตรวจสอบค่า FullScale and SetPoint
 
   resetNextionEtxCome();
 
@@ -82,17 +84,31 @@ void checkScaling(boolean _flag)
 {
   if (_flag)
   {
-    Serial.println();
+    //float FULLSC = incomingChar;
+	Serial.println();
     Serial.println("Ask entry scale.");
 
     memset(buffer, 0, sizeof(buffer));
     getText("t61", buffer, sizeof(buffer));
+	
 
-    callPage("3");
+    callPage("0");
 
-    setText("t21", "Hi");
+    setText("t61", "Hi");
 
     Serial.println("End ask.");
+	
+	//float FULLSC = incomingChar;
+	//getText("t61");
+	//callPage ("10");
+	
+	//if (FULLSC >= SETP)
+	//{
+		//callPage("10");
+	//}else
+	//{
+		//callPage("14");
+	//}
   }
 }
 
@@ -231,29 +247,29 @@ void taskBlink(boolean _flag)
 // ----------------------------------------------------------------------
 // Task เพิ่มคาบเวลาในการ Blink
 // ----------------------------------------------------------------------
-void taskIncBlinkPeriod(boolean _flag)
-{
-  if (_flag)
-  {
-    MY_TIME_BLINK = MY_TIME_BLINK + 50; //อัพเดตหน่วยความจำ
-    if (2000 < MY_TIME_BLINK) MY_TIME_BLINK = 2000; //ถ้าหน่วยความจำมากกว่า 2000
-    Serial.print("Increase MY_TIME_BLINK to "); //ให้ปริ๊นข้อความใน""
-    Serial.print(MY_TIME_BLINK, DEC);  //ให้ไฟกระพริบ
-    Serial.println();
-  }
-}
+//void taskIncBlinkPeriod(boolean _flag)
+//{
+  //if (_flag)
+  //{
+    //MY_TIME_BLINK = MY_TIME_BLINK + 50; //อัพเดตหน่วยความจำ
+    //if (2000 < MY_TIME_BLINK) MY_TIME_BLINK = 2000; //ถ้าหน่วยความจำมากกว่า 2000
+   // Serial.print("Increase MY_TIME_BLINK to "); //ให้ปริ๊นข้อความใน""
+   // Serial.print(MY_TIME_BLINK, DEC);  //ให้ไฟกระพริบ
+   // Serial.println();
+//  }
+//}
 
 // ----------------------------------------------------------------------
 // Task ลดคาบเวลาในการ Blink
 // ----------------------------------------------------------------------
-void taskDecBlinkPeriod(boolean _flag)
-{
-  if (_flag)
-  {
-    MY_TIME_BLINK = MY_TIME_BLINK - 50; //อัพเดตหน่วยความจำ
-    if (MY_TIME_BLINK < 50) MY_TIME_BLINK = 50; //ถ้าหน่วยความจำน้อยกว่า 50
-    Serial.print("Decrease MY_TIME_BLINK to ");  //ให้ปริ๊นข้อความใน""
-    Serial.print(MY_TIME_BLINK, DEC); //ให้ไฟกระพริบ
-    Serial.println();
-  }
-}
+//void taskDecBlinkPeriod(boolean _flag)
+//{
+  //if (_flag)
+  //{
+  //  MY_TIME_BLINK = MY_TIME_BLINK - 50; //อัพเดตหน่วยความจำ
+  //  if (MY_TIME_BLINK < 50) MY_TIME_BLINK = 50; //ถ้าหน่วยความจำน้อยกว่า 50
+ //   Serial.print("Decrease MY_TIME_BLINK to ");  //ให้ปริ๊นข้อความใน""
+  //  Serial.print(MY_TIME_BLINK, DEC); //ให้ไฟกระพริบ
+  //  Serial.println();
+//  }
+//}

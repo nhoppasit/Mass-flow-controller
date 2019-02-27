@@ -98,10 +98,10 @@ uint16_t recvRetString(char *buffer, uint16_t len, uint32_t timeout)
     start = millis();
     while (millis() - start <= timeout)
     {
-        while (Serial1.available())
+		while (Serial1.available())
         {
             c = Serial1.read();
-            if (str_start_flag)
+			if (str_start_flag)
             {
                 if (0xFF == c)
                 {
@@ -124,6 +124,79 @@ uint16_t recvRetString(char *buffer, uint16_t len, uint32_t timeout)
         
         if (cnt_0xff >= 3)
         {
+			Serial.println("9999");
+            break;
+        }
+    }
+
+    ret = temp.length();
+    ret = ret > len ? len : ret;
+    strncpy(buffer, temp.c_str(), ret);
+    
+__return:
+
+    Serial.print("recvRetString[");
+    Serial.print(temp.length());
+    Serial.print(",");
+    Serial.print(temp);
+    Serial.println("]");
+
+    return ret;
+}
+
+uint16_t recvRetString2(char *buffer, uint16_t len, uint32_t timeout)
+{
+    uint16_t ret = 0;
+    bool str_start_flag = false;
+    uint8_t cnt_0xff = 0;
+    String temp = String("");
+    uint8_t c = 0;
+    long start;
+
+	int nn;
+	uint8_t temp1[1] = {0};
+    	
+    if (!buffer || len == 0)
+    {
+        goto __return;
+    }
+    
+    start = millis();
+    while (millis() - start <= timeout)
+    {
+		while (true)
+        {
+			Serial1.setTimeout(timeout);
+			nn != Serial1.readBytes((char *)temp1, sizeof(temp1));
+			c = temp1[0];
+			Serial.println(nn);
+			Serial.println(c);
+			Serial.println("----");
+			//c = Serial1.read();
+			if (str_start_flag)
+            {
+                if (0xFF == c)
+                {
+                    cnt_0xff++;                    
+                    if (cnt_0xff >= 3)
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    temp += (char)c;
+                }
+            }
+            else if (NEX_RET_STRING_HEAD == c)
+            {
+                str_start_flag = true;
+            }
+        }
+        
+        if (cnt_0xff >= 3)
+        {
+			Serial.println("9999");
             break;
         }
     }
@@ -179,6 +252,10 @@ bool recvRetCommandFinished(uint32_t timeout)
     Serial1.setTimeout(timeout);
     if (sizeof(temp) != Serial1.readBytes((char *)temp, sizeof(temp)))
     {
+		Serial.println(temp[0]);
+        Serial.println(temp[1]);
+        Serial.println(temp[2]);
+        Serial.println(temp[3]);
         ret = false;
     }
 

@@ -45,7 +45,7 @@ void setup() {
 
   Serial.print("Software started. Hello PC.");
 
-  Serial1.print("Hello for test if you are Docklight.");
+  Serial.print("Hello for test if you are Docklight.");
 
   digitalWrite(13, LOW);
 }
@@ -104,23 +104,11 @@ void testTextbox(boolean _flag)
 		Serial.println("check textbox");
 		memset(buffer, 0, sizeof(buffer));
 		getText("t61", buffer, sizeof(buffer));
-    //Serial.print(Serial1.readBytes(buffer,sizeof(buffer,DEC)));
-    //Serial.print((char)Serial1.read(),DEC); 
-		//Serial.print((int)Serial1.read()); 
-
-   if (strcmp(buffer,DEC))//เป็นฟังก์ชันที่ใช้เปรียบเทียบข้อมูลชนิดสตริง2ค่า ซึ่งการเปรียบเทียบสตริงจะใช้ค่ารหัส ASCII เปรียบเทียบทีละตัวอักขระ
-    {
-        digitalWrite(13, HIGH);
-        strcpy(buffer, DEC);// เป็นฟังก์ชันที่ใช้คัดลอกข้อมูลจาก string ค่าหนึ่งไปยัง string อีกค่าหนึ่ง
-    }
-    /* else
-    {
-        digitalWrite(13, LOW);
-        strcpy(buffer,DEC);
-    }
-    */
-		setText("t101", buffer);
-    setText("t102","35" );
+      
+	   
+		//setText("t101", buffer); //โชวค่าbufferที่t101
+		//setText("t101", "15");
+        //setText("t102","35" );
 		Serial.println("Finish");
 	}
 }
