@@ -1,92 +1,182 @@
 #include <Adafruit_MCP4725.h>
 Adafruit_MCP4725 dac;
 
-float   V;
-float Vout_sccm_FS;
-float Vout_sccm_SP;
-float FSN1;
-float SPN1;
-float Flowrate,Flowout;
-float FS1;
-float SP1;
-float GT1;
-float GM1;
+// ----------------------------------------------------------------------
+// Channel 1
+// ----------------------------------------------------------------------
+float Vout_1;
+float Vout_sccm_FS_1;
+float Vout_sccm_SP_1;
+float FSN1; //Full Scale New 1
+float SPN1; //Set Point New 1
+float Flowrate1,Flowout1;
+float FS1; //Full Scale 1
+float SP1; //Set Point 1
+float GT1; // Type of gas 1
+float GM1; // Gas of massflow 1
 int A;
 int B;
-int analogValue;
+int analogValue1;
 
+// ----------------------------------------------------------------------
+// Channel 2
+// ----------------------------------------------------------------------
+float Vout_2;
+float Vout_sccm_FS_2;
+float Vout_sccm_SP_2;
+float FSN2; //Full Scale New 2
+float SPN2; //Set Point New 2
+float Flowrate2,Flowout2;
+float FS2; //Full Scale 2
+float SP2; //Set Point 2
+float GT2; // Type of gas 2
+float GM2; // Gas of massflow 2
+int C;
+int D;
+int analogValue2;   
 
-void setup(void) {
-  Serial.begin(9600);
-  dac.begin(0x60);
-  dac.begin(0X61);
-  pinMode(A0, INPUT);
- 
-}
-
-void voltage1(unsigned int volt1)
+void setup(void) 
 {
-  dac.begin(0x60);
-  dac.setVoltage(volt1, false);
+  Serial.begin(9600);
+  dac.begin(0x60);  //Start DAC. DAC address 0x60 
+  pinMode(A0, INPUT);
+
+  dac.begin(0x61); //Start DAC. DAC address 0x61
+  pinMode(A1, INPUT);
 }
+
+void voltage1(unsigned int A)
+{
+  dac.begin(0x60);  //Start DAC. DAC address 0x60 
+  dac.setVoltage(A, false); //Set DAC voltage
+}
+
+void voltage2(unsigned int C)
+{
+  dac.begin(0x61);  //Start DAC. DAC address 0x61
+  dac.setVoltage(C, false); //Set DAC voltage
+} 
 
 void loop(void)
 {
    if (Serial.available() > 0)
 {
-    //String inChar = Serial.readStringUntil(',');
-    String inChar0 = Serial.readStringUntil(',');
-    String inChar1 = Serial.readStringUntil(',');
-    String inChar2 = Serial.readStringUntil(',');
+// ----------------------------------------------------------------------
+// Set Value Channel 1
+// ----------------------------------------------------------------------
+    //String inChar = Serial.readStringUntil(','); // fullscale1 อ่านตัวอักษรจากสตรีมไปเป็นสตริง แล้วเมื่อพบ "," จะสิ้นสุดฟังก์ชั่น 
+    String inChar0 = Serial.readStringUntil(','); // Set Point1
+    String inChar1 = Serial.readStringUntil(','); // type of Gas1
+    String inChar2 = Serial.readStringUntil(',');  // Gas of massflow1
 
-    //FS1  = inChar.toFloat(); // fullscale    
-    SP1  = inChar0.toFloat();//setpoint
-    GT1  = inChar1.toFloat();//type of gas
-    GM1  = inChar2.toFloat();//gas of massflow
+    //FS1  = inChar.toFloat(); // fullscale1   แปลงค่าจากตัวแปรประเภทตัวอักขระเป็นตัวแปรประเภทตัวเลขทศนิยม
+    SP1  = inChar0.toFloat();//setpoint1  แปลงค่าจากตัวแปรประเภทตัวอักขระเป็นตัวแปรประเภทตัวเลขทศนิยม
+    GT1  = inChar1.toFloat();//type of gas1  แปลงค่าจากตัวแปรประเภทตัวอักขระเป็นตัวแปรประเภทตัวเลขทศนิยม
+    GM1  = inChar2.toFloat();//gas of massflow 1 แปลงค่าจากตัวแปรประเภทตัวอักขระเป็นตัวแปรประเภทตัวเลขทศนิยม
+    
+// ----------------------------------------------------------------------
+// Set Value Channel 2
+// ----------------------------------------------------------------------  
 
-    A = map( SP1, 0, 100, 0, 4095); //ฟังชั่นเที่ยบบรรหยัดไตรยางmassflowตัวที่1 กำหนด FS = 100
-    voltage1(A);
+   //String inChar3 = Serial.readStringUntil(','); // fullscale2 อ่านตัวอักษรจากสตรีมไปเป็นสตริง แล้วเมื่อพบ "," จะสิ้นสุดฟังก์ชั่น 
+    String inChar4 = Serial.readStringUntil(','); // Set Point2
+    String inChar5 = Serial.readStringUntil(','); // type of Gas2
+    String inChar6 = Serial.readStringUntil(',');  // Gas of massflow2
+   
+     //FS2  = inChar3.toFloat(); // fullscale2   แปลงค่าจากตัวแปรประเภทตัวอักขระเป็นตัวแปรประเภทตัวเลขทศนิยม
+    SP2  = inChar4.toFloat();//setpoint2  แปลงค่าจากตัวแปรประเภทตัวอักขระเป็นตัวแปรประเภทตัวเลขทศนิยม
+    GT2  = inChar5.toFloat();//type of gas2  แปลงค่าจากตัวแปรประเภทตัวอักขระเป็นตัวแปรประเภทตัวเลขทศนิยม
+    GM2  = inChar6.toFloat();//gas of massflow2 แปลงค่าจากตัวแปรประเภทตัวอักขระเป็นตัวแปรประเภทตัวเลขทศนิยม  
+
+// ----------------------------------------------------------------------
+// Part Calculate Channel 1
+// ----------------------------------------------------------------------
+    A = map( SP1, 0, 100, 0, 4095); //ฟังชั่นเที่ยบบรรหยัดไตรยางmassflow  กำหนด FS = 100 แปลง0-100ให้อยู่ในช่วง0-4095 byte
+    voltage1(A); //Set DAC voltage
     Serial.print("A = ");
     Serial.println(A,BIN);
     Serial.println(A);
     
-    B = map( A, 0, 4095, 0, 100);  //กำหนด FS = 100
+    B = map( A, 0, 4095, 0, 100);  //กำหนด FS = 100 //แปลง0-4095ให้อยู่ในช่วง0-100 sccm
     Serial.print("B(sccm) = ");
     Serial.println(B);
-
       
-    analogValue = analogRead(A0);
-      Serial.print("analogValue = ");
-      Serial.println(analogValue);
+    analogValue1 = analogRead(A0);  //  อ่านค่า input จากขาanalog A0
+      Serial.print("analogValue1 = ");
+      Serial.println(analogValue1);
 
-    V = ( 5.0 / 4095 ) * analogValue;
-      Serial.print("Vout(V) = ");
-      Serial.println(V);
+    Vout_1 = ( 5.0 / 4095 ) * analogValue1; //แปลงค่าจากดิจิตอลเป็นอนาลอก
+      Serial.print("Vout_1(V) = ");
+      Serial.println(Vout_1);
 
-    Vout_sccm_FS = ( 100 / 5 ) * V; //กำหนด FS = 100
-      Serial.print("Vout_sccm_FS = ");
-      Serial.println(Vout_sccm_FS);
+    Vout_sccm_FS_1 = ( 100 / 5 ) * Vout_1; //กำหนด FS = 100 เปลี่ยนหน่วยFull ScaleจากVเป็น sccm
+      Serial.print("Vout_sccm_FS_1 = ");
+      Serial.println(Vout_sccm_FS_1);
       
-    Vout_sccm_SP = ( SP1 / 5 ) * V;
-      Serial.print("Vout_sccm_SP = ");
-      Serial.println(Vout_sccm_SP);
+    Vout_sccm_SP_1 = ( SP1 / 5 ) * Vout_1;  //เปลี่ยนหน่วยSet Point จากVเป็น sccm
+      Serial.print("Vout_sccm_SP_1 = ");
+      Serial.println(Vout_sccm_SP_1);
       
-    FSN1 = ( GT1 / GM1 )* Vout_sccm_FS  ;
+    FSN1 = ( GT1 / GM1 )* Vout_sccm_FS_1  ;  //คิดFull Scale ค่าใหม่
       Serial.print("FSN1(sccm) = ");
       Serial.println(FSN1);
 
-    SPN1 = ( GT1 / GM1 )* Vout_sccm_SP  ;
+    SPN1 = ( GT1 / GM1 )* Vout_sccm_SP_1  ;  //คิดSet point ค่าใหม่
       Serial.print("SPN1(sccm) = ");
       Serial.println(SPN1);
 
-    Flowrate = ( SPN1 / FSN1 )*100 ; 
-      Serial.print("Flowrate(sccm) = ");
-      Serial.println(Flowrate);
+    Flowrate1 = ( SPN1 / FSN1 )*100 ;  //คิดค่าอัตราการไหล
+      Serial.print("Flowrate1(sccm) = ");
+      Serial.println(Flowrate1);
 
-    Flowout = ( SP1 / 100 ) * 5 ; // กำหนดให้ FS = 100;
-      Serial.print("Flowrate_Vout(V) = ");
-      Serial.println( Flowout);   
+    Flowout1 = ( SP1 / 100 ) * 5 ; // กำหนดให้ FS = 100 แปลงหน่วยจากsccmเป็น v
+      Serial.print("Flowrate_Vout1(V) = ");
+      Serial.println( Flowout1);   
+
+// ----------------------------------------------------------------------
+// Part Calculate Channel 2
+// ----------------------------------------------------------------------
+    C = map( SP2, 0, 100, 0, 4095); //ฟังชั่นเที่ยบบรรหยัดไตรยางmassflow  กำหนด FS = 100 แปลง0-100ให้อยู่ในช่วง0-4095 byte
+    voltage2(C); //Set DAC voltage
+    Serial.print("C = ");
+    Serial.println(C,BIN);
+    Serial.println(C);
+    
+    D = map( C, 0, 4095, 0, 100);  //กำหนด FS = 100 //แปลง0-4095ให้อยู่ในช่วง0-100 sccm
+    Serial.print("D(sccm) = ");
+    Serial.println(D);
+      
+    analogValue2 = analogRead(A1);  //  อ่านค่า input จากขาanalog A0
+      Serial.print("analogValue2 = ");
+      Serial.println(analogValue2);
+
+    Vout_2 = ( 5.0 / 4095 ) * analogValue2; //แปลงค่าจากดิจิตอลเป็นอนาลอก
+      Serial.print("Vout_2(V) = ");
+      Serial.println(Vout_2);
+
+    Vout_sccm_FS_2 = ( 100 / 5 ) * Vout_2; //กำหนด FS = 100 เปลี่ยนหน่วยFull ScaleจากVเป็น sccm
+      Serial.print("Vout_sccm_FS_2 = ");
+      Serial.println(Vout_sccm_FS_2);
+      
+    Vout_sccm_SP_2 = ( SP2 / 5 ) * Vout_2;  //เปลี่ยนหน่วยSet Point จากVเป็น sccm
+      Serial.print("Vout_sccm_SP_2 = ");
+      Serial.println(Vout_sccm_SP_2);
+      
+    FSN2 = ( GT2 / GM2 )* Vout_sccm_FS_2  ;  //คิดFull Scale ค่าใหม่
+      Serial.print("FSN2(sccm) = ");
+      Serial.println(FSN2);
+
+    SPN2 = ( GT2 / GM2 )* Vout_sccm_SP_2  ;  //คิดSet point ค่าใหม่
+      Serial.print("SPN2(sccm) = ");
+      Serial.println(SPN2);
+
+    Flowrate2 = ( SPN2 / FSN2 )*100 ;  //คิดค่าอัตราการไหล
+      Serial.print("Flowrate2(sccm) = ");
+      Serial.println(Flowrate2);
+
+    Flowout2 = ( SP2 / 100 ) * 5 ; // กำหนดให้ FS = 100 แปลงหน่วยจากsccmเป็น v
+      Serial.print("Flowrate_Vout2(V) = ");
+      Serial.println( Flowout2);   
 
    }
-  
 }
