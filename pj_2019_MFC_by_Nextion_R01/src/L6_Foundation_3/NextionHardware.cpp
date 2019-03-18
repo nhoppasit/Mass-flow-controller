@@ -208,9 +208,14 @@ bool systemInit(void)
 	bool ret1 = false;
 	bool ret2 = false;
 	
-	Serial.begin(9600);
+	Serial.begin(115200);
 	Serial1.begin(9600);
 	sendCommand("");
+	
+	sendCommand("baud=115200");
+	Serial1.end();
+	Serial1.begin(115200);
+	
 	sendCommand("bkcmd=1");
 	ret1 = recvRetCommandFinished();
 	sendCommand("page 0");
