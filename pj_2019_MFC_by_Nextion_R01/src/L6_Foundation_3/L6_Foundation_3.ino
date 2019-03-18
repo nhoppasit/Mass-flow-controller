@@ -1,4 +1,5 @@
-#define PRINT_NEXTION_COMMU 1
+#define PRINT_NEXTION_COMMU 0
+#define PRINT_DEBUG 1
 
 //##############################################################################
 //                             DECLARATIONS
@@ -33,6 +34,12 @@ byte dataBuff[6];
 // Nextion variables
 // ----------------------------------------------------------------------
 char buffer[100] = {0};
+int len_buff;
+int ibuff;
+
+// ----------------------------------------------------------------------
+// PHYSICS
+// ----------------------------------------------------------------------
 //float FULLSC;
 //float SETP;
 
@@ -42,12 +49,10 @@ char buffer[100] = {0};
 void setup() {
 
   systemInit();
+	
+  Serial.print("Software started. Hello PC.");
 
   pinMode(13, OUTPUT);
-
-  Serial.print("Software started. Hello PC.");
-  Serial.print("Hello for test if you are Docklight.");
-
   digitalWrite(13, LOW);
 }
 
@@ -73,7 +78,7 @@ void loop()
   //taskIncBlinkPeriod(nextionEtxCome && dataBuff[0] == 0x01 && dataBuff[1] == 0x02 && dataBuff[2] == 0x00);
   //taskDecBlinkPeriod(nextionEtxCome && dataBuff[0] == 0x02 && dataBuff[1] == 0x02 && dataBuff[2] == 0x00);
 
-  checkScaling(nextionEtxCome && dataBuff[0] == 0x06 && dataBuff[1] == 0x05 && dataBuff[2] == 0x00); // 65 06 05 00 FF FF FF ปุ่ม next ตรวจสอบค่า FullScale and SetPoint
+  checkScaling(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x06 && dataBuff[1] == 0x05 && dataBuff[2] == 0x00); // 65 06 05 00 FF FF FF ปุ่ม next ตรวจสอบค่า FullScale and SetPoint
 
   resetNextionEtxCome();
 
@@ -82,33 +87,26 @@ void loop()
 void checkScaling(boolean _flag)
 {
   if (_flag)
-  {
-    //float FULLSC = incomingChar;
-		Serial.println();
+  {		
+
+    Serial.println();
     Serial.println("Ask entry scale.");
 
+		callPage("2");
     memset(buffer, 0, sizeof(buffer));
-    getText("t61", buffer, sizeof(buffer));
-	
-
-    callPage("0");
-
-    setText("t61", "Hi");
-
-    Serial.println("End ask.");
-	
-		float FULLSC = incomingChar;
-		getText("t61");
+    len_buff = getText("t21", buffer, sizeof(buffer));
+		callPage("10");
 		
-		callPage ("10");
-		
-		if (FULLSC >= SETP)
+#if PRINT_DEBUG
+		Serial.print("Buffer[] = ");
+		for(ibuff=0;ibuff<len_buff;ibuff++)
 		{
-			callPage("10");
-		}else
-		{
-			callPage("14");
+			Serial.print(buffer[ibuff]);
 		}
+		Serial.println();	
+#endif
+
+    Serial.println("End ask.");		
   }
 }
 
@@ -150,9 +148,7 @@ void listenNextion()
 #endif
 
     if (incomingChar == 0x65) //ถ้าคีย์ข้อมูลค่า65
-
     {
-
       nextionStxCome = true;     //nextionStxCome จะเป็นจริง (Stx=Start TexT)
       nextionEtxCome = false;    //nextionEtxCome จะเป็นเท็จ (Etx=End TexT)
       byteIdx = 0;
@@ -200,6 +196,22 @@ void listenNextion()
 }
 
 // ----------------------------------------------------------------------
+// Task resetNextionStxCome
+// ----------------------------------------------------------------------
+void resetNextionStxCome()
+{
+  if (nextionStxCome)
+  {
+    nextionStxCome = false;
+
+#if PRINT_NEXTION_COMMU
+    Serial.println("Reset STX. Command expired."); //ปริ๊นข้อความใน""
+    Serial.println();
+#endif
+  }
+}
+
+// ----------------------------------------------------------------------
 // Task resetNextionEtxCome
 // ----------------------------------------------------------------------
 void resetNextionEtxCome()
@@ -207,10 +219,14 @@ void resetNextionEtxCome()
   if (nextionEtxCome)
   {
     nextionEtxCome = false;
+
+#if PRINT_NEXTION_COMMU
     Serial.println("Reset ETX. Command expired."); //ปริ๊นข้อความใน""
     Serial.println();
+#endif
   }
 }
+
 
 //##############################################################################
 //                             PROCEDURES OR FUNCTIONS
