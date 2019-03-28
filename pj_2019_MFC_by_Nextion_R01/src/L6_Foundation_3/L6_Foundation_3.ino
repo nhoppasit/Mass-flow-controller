@@ -1,5 +1,5 @@
 #define PRINT_NEXTION_COMMU 0
-#define PRINT_DEBUG 1 // add 
+#define PRINT_DEBUG 1
 
 //##############################################################################
 //                             DECLARATIONS
@@ -20,6 +20,7 @@ MCP4922 DAC_B(51, 52, 53, 5); // (MOSI,SCK,CS,LDAC) define Connections for MEGA_
 float Vout_1;
 float Vout_sccm_FS_1;
 float Vout_sccm_SP_1;
+float FSNN1;
 float FSN1; //Full Scale New 1
 float SPN1; //Set Point New 1
 float Flowrate1, Flowout1;
@@ -124,6 +125,10 @@ char number1[100] ;
 int len_num1;
 int inum1;
 
+//char seting[100] = {0};
+//int len_set;
+//int iset;
+
 // ----------------------------------------------------------------------
 // Nextion variables ch2
 // ----------------------------------------------------------------------
@@ -176,16 +181,35 @@ int len_num7;
 int inum7;
 
 // ----------------------------------------------------------------------
-// PHYSICS
+// Show Text After Massflow Process
 // ----------------------------------------------------------------------
-char sbuff[8]; 
-//float FULLSC;
-//float SETP;
+float V_ch1;
+float VtoSccm_1;
+char sbuff1[8];
+double MassflowtoNextion1 ;
+String value1;
+
+float V_ch2;
+float VtoSccm_2;
+char sbuff2[8];
+double MassflowtoNextion2 = 20;
+String value2;
+
+float V_ch3;
+float VtoSccm_3;
+char sbuff3[8];
+double MassflowtoNextion3 = 20;
+String value3;
+
+float V_ch4;
+float VtoSccm_4;
+char sbuff4[8];
+double MassflowtoNextion4 = 20;
+String value4;
 
 //##############################################################################
 //                             SETUP
 //##############################################################################
-
 void setup() {
 
   systemInit();
@@ -197,11 +221,10 @@ void setup() {
 
   Serial.begin(115200);
   SPI.begin();
-
 }
 void voltage1(unsigned int A)
 {
-  DAC_A.Set(A, 0);
+  DAC_A.Set(A, C);
 }
 void voltage2(unsigned int C)
 {
@@ -209,13 +232,12 @@ void voltage2(unsigned int C)
 }
 void voltage3(unsigned int E)
 {
-  DAC_B.Set(E, 0);
+  DAC_B.Set(E, G);
 }
 void voltage4(unsigned int G)
 {
   DAC_B.Set(E, G);
 }
-
 //##############################################################################
 //                             LOOP
 //##############################################################################
@@ -239,14 +261,24 @@ void loop()
   //taskIncBlinkPeriod(nextionEtxCome && dataBuff[0] == 0x01 && dataBuff[1] == 0x02 && dataBuff[2] == 0x00);
   //taskDecBlinkPeriod(nextionEtxCome && dataBuff[0] == 0x02 && dataBuff[1] == 0x02 && dataBuff[2] == 0x00);
 
-//check start
-  checkChannel1(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x0B && dataBuff[1] == 0x05 && dataBuff[2] == 0x00); // 65 0B 05 00 FF FF FF ปุ่ม next ตรวจสอบค่า FullScale and SetPoint
-  checkChannel2(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x0C && dataBuff[1] == 0x05 && dataBuff[2] == 0x00); // 65 0C 05 00 FF FF FF ปุ่ม next ตรวจสอบค่า FullScale and SetPoint
-  checkChannel3(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x0D && dataBuff[1] == 0x05 && dataBuff[2] == 0x00); // 65 0D 05 00 FF FF FF ปุ่ม next ตรวจสอบค่า FullScale and SetPoint
-  checkChannel4(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x0E && dataBuff[1] == 0x05 && dataBuff[2] == 0x00); // 65 0E 05 00 FF FF FF ปุ่ม next ตรวจสอบค่า FullScale and SetPoint
+  // ............................
+  // CHECK STRAT
+  // ............................
+  checkChannel1(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0B && dataBuff[2] == 0x00); // 65 16 0B 00 FF FF FF ปุ่ม start ตรวจสอบค่า FullScale and SetPoint
+  checkChannel2(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0C && dataBuff[2] == 0x00); // 65 16 0C 00 FF FF FF ปุ่ม start ตรวจสอบค่า FullScale and SetPoint
+  checkChannel3(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0D && dataBuff[2] == 0x00); // 65 16 0D 00 FF FF FF ปุ่ม start ตรวจสอบค่า FullScale and SetPoint
+  checkChannel4(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0E && dataBuff[2] == 0x00); // 65 16 0E 00 FF FF FF ปุ่ม start ตรวจสอบค่า FullScale and SetPoint
+
+  // ............................
+  // CHECK STOP
+  // ............................
+  checkSTOP1(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x07 && dataBuff[2] == 0x00); // 65 16 07 00 FF FF FF ปุ่ม stop
+  checkSTOP2(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x08 && dataBuff[2] == 0x00); // 65 16 08 00 FF FF FF ปุ่ม stop
+  checkSTOP3(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x09 && dataBuff[2] == 0x00); // 65 16 09 00 FF FF FF ปุ่ม stop
+  checkSTOP4(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0A && dataBuff[2] == 0x00); // 65 16 0A 00 FF FF FF ปุ่ม stop
+
   resetNextionEtxCome();
 }
-
 void checkChannel1(boolean _flag)
 {
   if (_flag)
@@ -266,7 +298,7 @@ void checkChannel1(boolean _flag)
     memset(number, 0, sizeof(number));
     len_num = getText("t111", number, sizeof(number));
     len_num1 = getText("t112", number1, sizeof(number1));
-
+    
     // ----------------------------------------------------------------------
     // Channel 1
     // ----------------------------------------------------------------------
@@ -349,9 +381,9 @@ void checkChannel1(boolean _flag)
     }
     else
     {
- 	  GM1 = atof(buffer);
-	  Serial.print("GM1 = ");
-      Serial.println(GM1,3);
+      GM1 = atof(buffer);
+      Serial.print("GM1 = ");
+      Serial.println(GM1, 3);
     }
 
     String T = String(buffer1);
@@ -394,11 +426,11 @@ void checkChannel1(boolean _flag)
       Serial.print("GF1 = ");
       Serial.println(GF1);
     }
-	else
+    else
     {
- 	  GF1 = atof(buffer1);
-	  Serial.print("GF1 = ");
-      Serial.println(GF1,3);
+      GF1 = atof(buffer1);
+      Serial.print("GF1 = ");
+      Serial.println(GF1, 3);
     }
 
     FS1 = atof(number);
@@ -411,64 +443,117 @@ void checkChannel1(boolean _flag)
 
     if (SP1 > FS1)
     {
-      callPage("11");
+      callPage("27");
+
+      A = 0;
+      voltage1(A); //Set DAC voltage
+      Serial.print("A = ");
+      Serial.println(A);
+
+      // ----------------------------------------------------------------------
+      // Part Show Value 1
+      // ----------------------------------------------------------------------
+      V_ch1 = ( 5.0 / 1023 ) * analogValue1;
+      Serial.print("Vout(V_ch1) = ");
+      Serial.println(V_ch1);
+
+      VtoSccm_1 = ( SP1 / 5.0 ) * V_ch1;
+      Serial.print("VtoSccm_1 = ");
+      Serial.println(VtoSccm_1);
+      delay(100);
+
+      MassflowtoNextion1 = 0;
+      dtostrf(MassflowtoNextion1, 4, 2, sbuff1);
+      Serial.print("sbuff1 = ");
+      Serial.println(sbuff1);
+      setText("t0", sbuff1);
     }
     else
     {
       callPage("22");
+
+      // ----------------------------------------------------------------------
+      // Part Calculate Channel 1
+      // ----------------------------------------------------------------------
+      FSN1 = ( GF1 / GM1 ) * FS1;
+      Serial.print("FSN1(sccm) = ");
+      Serial.println(FSN1);
+
+      SPN1 = ( FSN1 / FS1 ) * SP1 ;
+      if (SPN1 > FS1)
+      {
+        SPN1 = FS1;
+      }
+      Serial.print("SPN1 = ");
+      Serial.println(SPN1);
+
+      A = map( SPN1, 0, FSN1, 0, 4095);  //ฟังชั่นเที่ยบบรรหยัดไตรยางmassflow  กำหนด FS1 = 100 แปลง 0-100 ให้อยู่ในช่วง 0-4095 byte
+      voltage1(A); //Set DAC voltage
+      Serial.print("A = ");
+      Serial.println(A, BIN);
+      Serial.println(A);
+
+      B = map( A, 0, 4095, 0, FSN1);  //กำหนด FS1 = 100 //แปลง 0-4095 ให้อยู่ในช่วง 0-100 sccm
+      Serial.print("B(sccm) = ");
+      Serial.println(B);
+
+      analogValue1 = analogRead(A2);  //  อ่านค่า input จากขาanalog A0
+      Serial.print("analogValue1 = ");
+      Serial.println(analogValue1);
+
+      Vout_1 = ( 5.0 / 4095 ) * analogValue1; //แปลงค่าจากดิจิตอลเป็นอนาลอก
+      Serial.print("Vout_1(V) = ");
+      Serial.println(Vout_1);
+
+      Vout_sccm_FS_1 = ( FS1 / 5 ) * Vout_1; //กำหนด FS1 = 100 เปลี่ยนหน่วยFull ScaleจากVเป็น sccm
+      Serial.print("Vout_sccm_FS_1 = ");
+      Serial.println(Vout_sccm_FS_1);
+
+      Flowout1 = ( SPN1 / FSN1  ) * 5  ; // กำหนดให้ FS1 = 100 แปลงหน่วยจากsccmเป็น v
+      Serial.print("Flowrate_Vout1(V) = ");
+      Serial.println( Flowout1, 3);
+      Serial.println("_______________________________ END CHANNEL 1 _______________________________");
+      setText("t4", "START1");
+      Serial.println("End ask.");
+
+      // ----------------------------------------------------------------------
+      // Part Show Value 1
+      // ----------------------------------------------------------------------
+      V_ch1 = ( 5.0 / 1023 ) * analogValue1;
+      Serial.print("Vout(V_ch1) = ");
+      Serial.println(V_ch1);
+
+      VtoSccm_1 = ( SP1 / 5.0 ) * V_ch1;
+      Serial.print("VtoSccm_1 = ");
+      Serial.println(VtoSccm_1);
+      delay(100);
+
+      MassflowtoNextion1 = 20;
+      //dtostrf(MassflowtoNextion1, 4, 2, sbuff1);
+	  dtostrf(SP1, 4, 2, sbuff1);
+      Serial.print("sbuff1 = ");
+      Serial.println(sbuff1);
+      setText("t0", sbuff1);
     }
-
-    // ----------------------------------------------------------------------
-    // Part Calculate Channel 1
-    // ----------------------------------------------------------------------
-
-    SPN1 = SP1 * ( GM1 / GF1 );
-    Serial.print("SPN1 = ");
-    Serial.println(SPN1);
-    Serial.println(SPN1, BIN);
-
-    A = map( SPN1, 0, FS1, 0, 4095); //ฟังชั่นเที่ยบบรรหยัดไตรยางmassflow  กำหนด FS1 = 100 แปลง 0-100 ให้อยู่ในช่วง 0-4095 byte
-    voltage1(A); //Set DAC voltage
-    Serial.print("A = ");
-    Serial.println(A, BIN);
-    Serial.println(A);
-
-    B = map( A, 0, 4095, 0, FS1);  //กำหนด FS1 = 100 //แปลง 0-4095 ให้อยู่ในช่วง 0-100 sccm
-    Serial.print("B(sccm) = ");
-    Serial.println(B);
-
-    analogValue1 = analogRead(A2);  //  อ่านค่า input จากขาanalog A0
-    Serial.print("analogValue1 = ");
-    Serial.println(analogValue1);
-
-    Vout_1 = ( 5.0 / 4095 ) * analogValue1; //แปลงค่าจากดิจิตอลเป็นอนาลอก
-    Serial.print("Vout_1(V) = ");
-    Serial.println(Vout_1);
-
-    Vout_sccm_FS_1 = ( FS1 / 5 ) * Vout_1; //กำหนด FS1 = 100 เปลี่ยนหน่วยFull ScaleจากVเป็น sccm
-    Serial.print("Vout_sccm_FS_1 = ");
-    Serial.println(Vout_sccm_FS_1);
-
-    FSN1 = ( GF1 / GM1 ) * FS1  ; //คิดFull Scale ค่าใหม่
-    Serial.print("FSN1(sccm) = ");
-    Serial.println(FSN1);
-
-    Flowout1 = ( SP1 / FSN1 ) * 5 ; // กำหนดให้ FS1 = 100 แปลงหน่วยจากsccmเป็น v
-    Serial.print("Flowrate_Vout1(V) = ");
-    Serial.println( Flowout1, 3);
-    Serial.println("_______________________________ END CHANNEL 1 _______________________________");
- 
-    // sprintf(sbuff,"%4.2f", 12.34 );
-    //setText("t0", sbuff);
-	//Serial.print("sbuff = ");
-    //Serial.println(sbuff);
-    //setText("t1", "20.00");
-    //setText("t2", "30.00");
-    //setText("t3", "40.00");
-    Serial.println("End ask.");
   }
 }
-
+void checkSTOP1(boolean _flag)
+{
+  if (_flag)
+  {
+    A = 0;
+    voltage1(A); //Set DAC voltage
+    Serial.print("A = ");
+    Serial.println(A);
+    setText("t4", "STOP1");
+    
+    MassflowtoNextion1 = 0;
+    dtostrf(MassflowtoNextion1, 4, 2, sbuff1);
+    Serial.print("sbuff1 = ");
+    Serial.println(sbuff1);
+    setText("t0", sbuff1);
+  }
+}
 void checkChannel2(boolean _flag)
 {
   if (_flag)
@@ -530,13 +615,6 @@ void checkChannel2(boolean _flag)
     // ----------------------------------------------------------------------
     // Channel 2
     // ----------------------------------------------------------------------
-    //GM2 = atof(buffer2);
-    //Serial.print("GM2 = ");
-    //Serial.println(GM2,4);
-
-    //GF2 = atof(buffer3);
-    //Serial.print("GF2 = ");
-    //Serial.println(GF2,4);
 
     String U = String(buffer2);
     Serial.print("U = ");
@@ -578,11 +656,11 @@ void checkChannel2(boolean _flag)
       Serial.print("GM2 = ");
       Serial.println(GM2);
     }
-	else
+    else
     {
- 	  GM2 = atof(buffer2);
-	  Serial.print("GM2 = ");
-      Serial.println(GM2,3);
+      GM2 = atof(buffer2);
+      Serial.print("GM2 = ");
+      Serial.println(GM2, 3);
     }
 
     String V = String(buffer3);
@@ -625,11 +703,11 @@ void checkChannel2(boolean _flag)
       Serial.print("GF2 = ");
       Serial.println(GF2);
     }
-	else
+    else
     {
- 	  GF2 = atof(buffer3);
-	  Serial.print("GF2 = ");
-      Serial.println(GF2,3);
+      GF2 = atof(buffer3);
+      Serial.print("GF2 = ");
+      Serial.println(GF2, 3);
     }
 
     FS2 = atof(number2);
@@ -642,56 +720,119 @@ void checkChannel2(boolean _flag)
 
     if (SP2 > FS2)
     {
-      callPage("12");
+      callPage("28");
+
+      C = 0;
+      voltage2(C);	 //Set DAC voltage
+      Serial.print("C = ");
+      Serial.println(C);
+
+      // ----------------------------------------------------------------------
+      // Part Show Value 2
+      // ----------------------------------------------------------------------
+      V_ch2 = ( 5.0 / 1023 ) * analogValue2;
+      Serial.print("Vout(V_ch2) = ");
+      Serial.println(V_ch2);
+
+      VtoSccm_2 = ( SP2 / 5.0 ) * V_ch2;
+      Serial.print("VtoSccm_2 = ");
+      Serial.println(VtoSccm_2);
+      delay(100);
+
+      MassflowtoNextion2 = 0;
+      dtostrf(MassflowtoNextion2, 4, 2, sbuff2);
+      Serial.print("sbuff2 = ");
+      Serial.println(sbuff2);
+      setText("t1", sbuff2);
     }
     else
     {
       callPage("22");
+
+      // ----------------------------------------------------------------------
+      // Part Calculate Channel 2
+      // ----------------------------------------------------------------------
+
+      FSN2 = ( GF2 / GM2 ) * FS2  ; //คิดFull Scale ค่าใหม่
+      Serial.print("FSN2(sccm) = ");
+      Serial.println(FSN2);
+
+      SPN2 = ( FSN2 / FS2 ) * SP2 ;
+      if (SPN2 > FS2)
+      {
+        SPN2 = FS2;
+      }
+      Serial.print("SPN2 = ");
+      Serial.println(SPN2);
+
+      C = map( SPN2, 0, FSN2, 0, 4095); //ฟังชั่นเที่ยบบรรหยัดไตรยางmassflow  กำหนด FS2 = 100 แปลง 0-100 ให้อยู่ในช่วง 0-4095 byte
+      voltage2(C); //Set DAC voltage
+      Serial.print("C = ");
+      Serial.println(C, BIN);
+      Serial.println(C);
+
+      D = map( C, 0, 4095, 0, FSN2);  //กำหนด FS2 = 100 //แปลง 0-4095 ให้อยู่ในช่วง 0-100 sccm
+      Serial.print("D(sccm) = ");
+      Serial.println(D);
+
+      analogValue2 = analogRead(A3);  //  อ่านค่า input จากขาanalog A1
+      Serial.print("analogValue2 = ");
+      Serial.println(analogValue2);
+
+      Vout_2 = ( 5.0 / 4095 ) * analogValue2; //แปลงค่าจากดิจิตอลเป็นอนาลอก
+      Serial.print("Vout_2(V) = ");
+      Serial.println(Vout_2);
+
+      Vout_sccm_FS_2 = ( FS2 / 5 ) * Vout_2; //กำหนด FS2 = 100 เปลี่ยนหน่วยFull Scale จาก V เป็น sccm
+      Serial.print("Vout_sccm_FS_2 = ");
+      Serial.println(Vout_sccm_FS_2);
+
+      Flowout2 = ( SPN2 / FSN2 ) * 5 ; // กำหนดให้ FS2 = 100 แปลงหน่วยจากsccmเป็น v
+      Serial.print("Flowrate_Vout2(V) = ");
+      Serial.println( Flowout2, 3);
+      Serial.println("_______________________________ END CHANNEL 2 _______________________________");
+
+      Serial.println("End ask.");
+      setText("t5", "START2");
+
+      // ----------------------------------------------------------------------
+      // Part Show Value 2
+      // ----------------------------------------------------------------------
+      V_ch2 = ( 5.0 / 1023 ) * analogValue2;
+      Serial.print("Vout(V_ch2) = ");
+      Serial.println(V_ch2);
+
+      VtoSccm_2 = ( SP2 / 5.0 ) * V_ch2;
+      Serial.print("VtoSccm_2 = ");
+      Serial.println(VtoSccm_2);
+      delay(100);
+
+      MassflowtoNextion2 = 20;
+      //dtostrf(MassflowtoNextion2, 4, 2, sbuff2);
+	  dtostrf(SP2, 4, 2, sbuff2);
+      Serial.print("sbuff2 = ");
+      Serial.println(sbuff2);
+      setText("t1", sbuff2);
     }
-    // ----------------------------------------------------------------------
-    // Part Calculate Channel 2
-    // ----------------------------------------------------------------------
-
-    SPN2 = SP2 * ( GM2 / GF2 );
-    Serial.print("SPN2 = ");
-    Serial.println(SPN2);
-    Serial.println(SPN2, BIN);
-
-    C = map( SPN2, 0, FS2, 0, 4095); //ฟังชั่นเที่ยบบรรหยัดไตรยางmassflow  กำหนด FS2 = 100 แปลง 0-100 ให้อยู่ในช่วง 0-4095 byte
-    voltage2(C); //Set DAC voltage
-    Serial.print("C = ");
-    Serial.println(C, BIN);
-    Serial.println(C);
-
-    D = map( C, 0, 4095, 0, FS2);  //กำหนด FS2 = 100 //แปลง 0-4095 ให้อยู่ในช่วง 0-100 sccm
-    Serial.print("D(sccm) = ");
-    Serial.println(D);
-
-    analogValue2 = analogRead(A3);  //  อ่านค่า input จากขาanalog A1
-    Serial.print("analogValue2 = ");
-    Serial.println(analogValue2);
-
-    Vout_2 = ( 5.0 / 4095 ) * analogValue2; //แปลงค่าจากดิจิตอลเป็นอนาลอก
-    Serial.print("Vout_2(V) = ");
-    Serial.println(Vout_2);
-
-    Vout_sccm_FS_2 = ( FS2 / 5 ) * Vout_2; //กำหนด FS2 = 100 เปลี่ยนหน่วยFull Scale จาก V เป็น sccm
-    Serial.print("Vout_sccm_FS_2 = ");
-    Serial.println(Vout_sccm_FS_2);
-
-    FSN2 = ( GF2 / GM2 ) * FS2  ; //คิดFull Scale ค่าใหม่
-    Serial.print("FSN2(sccm) = ");
-    Serial.println(FSN2);
-
-    Flowout2 = ( SP2 / FSN2 ) * 5 ; // กำหนดให้ FS2 = 100 แปลงหน่วยจากsccmเป็น v
-    Serial.print("Flowrate_Vout2(V) = ");
-    Serial.println( Flowout2, 3);
-    Serial.println("_______________________________ END CHANNEL 2 _______________________________");
-
-    Serial.println("End ask.");
   }
 }
-
+void checkSTOP2(boolean _flag)
+{
+  if (_flag)
+  {
+    C = 0;
+    voltage2(C);	 //Set DAC voltage
+    Serial.print("C = ");
+    Serial.println(C);
+    setText("t5", "STOP2");
+	
+	MassflowtoNextion2 = 0;
+    dtostrf(MassflowtoNextion2, 4, 2, sbuff2);	
+    Serial.print("sbuff2 = ");
+    Serial.println(sbuff2);
+    setText("t1", sbuff2);
+  }
+}
 void checkChannel3(boolean _flag)
 {
   if (_flag)
@@ -794,9 +935,9 @@ void checkChannel3(boolean _flag)
     }
     else
     {
- 	  GM3 = atof(buffer4);
-	  Serial.print("GM3 = ");
-      Serial.println(GM3,3);
+      GM3 = atof(buffer4);
+      Serial.print("GM3 = ");
+      Serial.println(GM3, 3);
     }
 
     String X = String(buffer5);
@@ -839,11 +980,11 @@ void checkChannel3(boolean _flag)
       Serial.print("GF3 = ");
       Serial.println(GF3);
     }
-	else
+    else
     {
- 	  GF3 = atof(buffer5);
-	  Serial.print("GF3 = ");
-      Serial.println(GF3,3);
+      GF3 = atof(buffer5);
+      Serial.print("GF3 = ");
+      Serial.println(GF3, 3);
     }
 
     FS3 = atof(number4);
@@ -856,57 +997,116 @@ void checkChannel3(boolean _flag)
 
     if (SP3 > FS3)
     {
-      callPage("13");
+      callPage("29");
+      E = 0;
+      voltage3(E); //Set DAC voltage
+      Serial.print("E = ");
+      Serial.println(E);
+
+      // ----------------------------------------------------------------------
+      // Part Show Value 3
+      // ----------------------------------------------------------------------
+      V_ch3 = ( 5.0 / 1023 ) * analogValue3;
+      Serial.print("Vout(V_ch3) = ");
+      Serial.println(V_ch3);
+
+      VtoSccm_3 = ( SP3 / 5.0 ) * V_ch3;
+      Serial.print("VtoSccm_3 = ");
+      Serial.println(VtoSccm_3);
+      delay(100);
+
+      MassflowtoNextion3 = 0;
+      dtostrf(MassflowtoNextion3, 4, 2, sbuff3);
+      Serial.print("sbuff3 = ");
+      Serial.println(sbuff3);
+      setText("t2", sbuff3);
     }
     else
     {
       callPage("22");
+      // ----------------------------------------------------------------------
+      // Part Calculate Channel 3
+      // ----------------------------------------------------------------------
+
+      FSN3 = ( GF3 / GM3 ) * FS3  ; //คิดFull Scale ค่าใหม่
+      Serial.print("FSN3(sccm) = ");
+      Serial.println(FSN3);
+
+      SPN3 = ( FSN3 / FS3 ) * SP3 ;
+      if (SPN3 > FS3)
+      {
+        SPN3 = FS3;
+      }
+      Serial.print("SPN3 = ");
+      Serial.println(SPN3);
+
+      E = map( SPN3, 0, FSN3, 0, 4095); //ฟังชั่นเที่ยบบรรหยัดไตรยางmassflow  กำหนด FS1 = 100 แปลง 0-100 ให้อยู่ในช่วง 0-4095 byte
+      voltage3(E);//Set DAC voltage
+      Serial.print("E = ");
+      Serial.println(E, BIN);
+      Serial.println(E);
+
+      F = map( E, 0, 4095, 0, FSN3); //กำหนด FS1 = 100 //แปลง 0-4095 ให้อยู่ในช่วง 0-100 sccm
+      Serial.print("F(sccm) = ");
+      Serial.println(F);
+
+      analogValue3 = analogRead(A4);  //  อ่านค่า input จากขาanalog A4 DAC ขา14
+      Serial.print("analogValue3 = ");
+      Serial.println(analogValue3);
+
+      Vout_3 = ( 5.0 / 4095 ) * analogValue3; //แปลงค่าจากดิจิตอลเป็นอนาลอก
+      Serial.print("Vout_3(V) = ");
+      Serial.println(Vout_3);
+
+      Vout_sccm_FS_3 = ( FS3 / 5 ) * Vout_3; //กำหนด FS1 = 100 เปลี่ยนหน่วยFull ScaleจากVเป็น sccm
+      Serial.print("Vout_sccm_FS_3 = ");
+      Serial.println(Vout_sccm_FS_3);
+
+      Flowout3 = ( SPN3 / FSN3 ) * 5 ; //  แปลงหน่วยจากsccmเป็น v
+      Serial.print("Flowrate_Vout3(V) = ");
+      Serial.println( Flowout3, 3);
+      Serial.println("_______________________________ END CHANNEL 3 _______________________________");
+      Serial.println("End ask.");
+      setText("t6", "START3");
+
+      // ----------------------------------------------------------------------
+      // Part Show Value 3
+      // ----------------------------------------------------------------------
+      V_ch3 = ( 5.0 / 1023 ) * analogValue3;
+      Serial.print("Vout(V_ch3) = ");
+      Serial.println(V_ch3);
+
+      VtoSccm_3 = ( SP3 / 5.0 ) * V_ch3;
+      Serial.print("VtoSccm_3 = ");
+      Serial.println(VtoSccm_3);
+      delay(100);
+
+      MassflowtoNextion3 = 20;
+     // dtostrf(MassflowtoNextion3, 4, 2, sbuff3);
+	  dtostrf(SP3, 4, 2, sbuff3);
+      Serial.print("sbuff3 = ");
+      Serial.println(sbuff3);
+      setText("t2", sbuff3);
     }
-
-    // ----------------------------------------------------------------------
-    // Part Calculate Channel 3
-    // ----------------------------------------------------------------------
-
-    SPN3 = SP3 * ( GM3 / GF3 );
-    Serial.print("SPN3 = ");
-    Serial.println(SPN3);
-    Serial.println(SPN3, BIN);
-
-    E = map( SPN3, 0, FS3, 0, 4095); //ฟังชั่นเที่ยบบรรหยัดไตรยางmassflow  กำหนด FS1 = 100 แปลง 0-100 ให้อยู่ในช่วง 0-4095 byte
-    voltage3(E); //Set DAC voltage
-    Serial.print("E = ");
-    Serial.println(E, BIN);
-    Serial.println(E);
-
-    F = map( E, 0, 4095, 0, FS3);  //กำหนด FS1 = 100 //แปลง 0-4095 ให้อยู่ในช่วง 0-100 sccm
-    Serial.print("F(sccm) = ");
-    Serial.println(F);
-
-    analogValue3 = analogRead(A4);  //  อ่านค่า input จากขาanalog A4 DAC ขา14
-    Serial.print("analogValue3 = ");
-    Serial.println(analogValue3);
-
-    Vout_3 = ( 5.0 / 4095 ) * analogValue3; //แปลงค่าจากดิจิตอลเป็นอนาลอก
-    Serial.print("Vout_3(V) = ");
-    Serial.println(Vout_3);
-
-    Vout_sccm_FS_3 = ( FS3 / 5 ) * Vout_3; //กำหนด FS1 = 100 เปลี่ยนหน่วยFull ScaleจากVเป็น sccm
-    Serial.print("Vout_sccm_FS_3 = ");
-    Serial.println(Vout_sccm_FS_3);
-
-    FSN3 = ( GF3 / GM3 ) * FS3  ; //คิดFull Scale ค่าใหม่
-    Serial.print("FSN3(sccm) = ");
-    Serial.println(FSN3);
-
-    Flowout3 = ( SP3 / FSN3 ) * 5 ; // กำหนดให้ FS1 = 100 แปลงหน่วยจากsccmเป็น v
-    Serial.print("Flowrate_Vout3(V) = ");
-    Serial.println( Flowout3, 3);
-    Serial.println("_______________________________ END CHANNEL 3 _______________________________");
-
-    Serial.println("End ask.");
   }
 }
-
+void checkSTOP3(boolean _flag)
+{
+  if (_flag)
+  {
+    E = 0;
+    voltage3(E); //Set DAC voltage
+    Serial.print("E = ");
+    Serial.println(E);
+    setText("t6", "STOP3");
+	
+	MassflowtoNextion3 = 0;
+    dtostrf(MassflowtoNextion3, 4, 2, sbuff3);
+    Serial.print("sbuff3 = ");
+    Serial.println(sbuff3);
+    setText("t2", sbuff3);
+  }
+}
 void checkChannel4(boolean _flag)
 {
   if (_flag)
@@ -1007,11 +1207,11 @@ void checkChannel4(boolean _flag)
       Serial.print("GM4 = ");
       Serial.println(GM4);
     }
-	else
+    else
     {
- 	  GM4 = atof(buffer6);
-	  Serial.print("GM4 = ");
-      Serial.println(GM4,3);
+      GM4 = atof(buffer6);
+      Serial.print("GM4 = ");
+      Serial.println(GM4, 3);
     }
 
     String Z = String(buffer7);
@@ -1054,11 +1254,11 @@ void checkChannel4(boolean _flag)
       Serial.print("GF4 = ");
       Serial.println(GF4);
     }
-	else
+    else
     {
- 	  GF4 = atof(buffer7);
-	  Serial.print("GF4 = ");
-      Serial.println(GF4,3);
+      GF4 = atof(buffer7);
+      Serial.print("GF4 = ");
+      Serial.println(GF4, 3);
     }
 
     FS4 = atof(number6);
@@ -1071,54 +1271,116 @@ void checkChannel4(boolean _flag)
 
     if (SP4 > FS4)
     {
-      callPage("14");
+      callPage("30");
+
+      G = 0;
+      voltage4(G); //Set DAC voltage
+      Serial.print("G = ");
+      Serial.println(G);
+
+      // ----------------------------------------------------------------------
+      // Part Show Value 4
+      // ----------------------------------------------------------------------
+      V_ch4 = ( 5.0 / 1023 ) * analogValue4;
+      Serial.print("Vout(V_ch4) = ");
+      Serial.println(V_ch4);
+
+      VtoSccm_4 = ( SP4 / 5.0 ) * V_ch4;
+      Serial.print("VtoSccm_4 = ");
+      Serial.println(VtoSccm_4);
+      delay(100);
+
+      MassflowtoNextion4 = 0;
+      dtostrf(MassflowtoNextion4, 4, 2, sbuff4);
+      Serial.print("sbuff4 = ");
+      Serial.println(sbuff4);
+      setText("t3", sbuff4);
     }
     else
     {
       callPage("22");
+
+      // ----------------------------------------------------------------------
+      // Part Calculate Channel 4
+      // ----------------------------------------------------------------------
+      FSN4 = ( GF4 / GM4 ) * FS4  ; //คิดFull Scale ค่าใหม่
+      Serial.print("FSN4(sccm) = ");
+      Serial.println(FSN4);
+
+      SPN4 = ( FSN4 / FS4 ) * SP4 ;
+      if (SPN4 > FS4)
+      {
+        SPN4 = FS4;
+      }
+      Serial.print("SPN4 = ");
+      Serial.println(SPN4);
+      Serial.println(SPN4, BIN);
+
+      G = map( SPN4, 0, FSN4, 0, 4095); //ฟังชั่นเที่ยบบรรหยัดไตรยางmassflow  กำหนด FS2 = 100 แปลง 0-100 ให้อยู่ในช่วง 0-4095 byte
+      voltage4(G); //Set DAC voltage
+      Serial.print("G = ");
+      Serial.println(G, BIN);
+      Serial.println(G);
+
+      F = map( G, 0, 4095, 0, FSN4);  //กำหนด FS2 = 100 //แปลง 0-4095 ให้อยู่ในช่วง 0-100 sccm
+      Serial.print("F(sccm) = ");
+      Serial.println(F);
+
+      analogValue4 = analogRead(A5);  //  อ่านค่า input จากขาanalog A5 DAC ขา10
+      Serial.print("analogValue4 = ");
+      Serial.println(analogValue4);
+
+      Vout_4 = ( 5.0 / 4095 ) * analogValue4; //แปลงค่าจากดิจิตอลเป็นอนาลอก
+      Serial.print("Vout_4(V) = ");
+      Serial.println(Vout_4);
+
+      Vout_sccm_FS_4 = ( FS4 / 5 ) * Vout_4; //กำหนด FS2 = 100 เปลี่ยนหน่วยFull Scale จาก V เป็น sccm
+      Serial.print("Vout_sccm_FS_4 = ");
+      Serial.println(Vout_sccm_FS_4);
+
+      Flowout4 = ( SPN4 / FSN4 ) * 5 ; // กำหนดให้ FS2 = 100 แปลงหน่วยจากsccmเป็น v
+      Serial.print("Flowrate_Vout4(V) = ");
+      Serial.println( Flowout4, 3);
+      Serial.println("_______________________________ END CHANNEL 4 _______________________________");
+      Serial.println("End ask.");
+      setText("t7", "START4");
+
+      // ----------------------------------------------------------------------
+      // Part Show Value 4
+      // ----------------------------------------------------------------------
+      V_ch4 = ( 5.0 / 1023 ) * analogValue4;
+      Serial.print("Vout(V_ch4) = ");
+      Serial.println(V_ch4);
+
+      VtoSccm_4 = ( SP4 / 5.0 ) * V_ch4;
+      Serial.print("VtoSccm_4 = ");
+      Serial.println(VtoSccm_4);
+      delay(100);
+
+      MassflowtoNextion4 = 20;
+      //dtostrf(MassflowtoNextion4, 4, 2, sbuff4);
+	  dtostrf(SP4, 4, 2, sbuff4);
+      Serial.print("sbuff4 = ");
+      Serial.println(sbuff4);
+      setText("t3", sbuff4);
     }
-
-    // ----------------------------------------------------------------------
-    // Part Calculate Channel 4
-    // ----------------------------------------------------------------------
-
-    SPN4 = SP4 * ( GM4 / GF4 );
-    Serial.print("SPN4 = ");
-    Serial.println(SPN4);
-    Serial.println(SPN4, BIN);
-
-    G = map( SPN4, 0, FS4, 0, 4095); //ฟังชั่นเที่ยบบรรหยัดไตรยางmassflow  กำหนด FS2 = 100 แปลง 0-100 ให้อยู่ในช่วง 0-4095 byte
+  }
+}
+void checkSTOP4(boolean _flag)
+{
+  if (_flag)
+  {
+    G = 0;
     voltage4(G); //Set DAC voltage
     Serial.print("G = ");
-    Serial.println(G, BIN);
     Serial.println(G);
-
-    F = map( G, 0, 4095, 0, FS4);  //กำหนด FS2 = 100 //แปลง 0-4095 ให้อยู่ในช่วง 0-100 sccm
-    Serial.print("F(sccm) = ");
-    Serial.println(F);
-
-    analogValue4 = analogRead(A5);  //  อ่านค่า input จากขาanalog A5 DAC ขา10
-    Serial.print("analogValue4 = ");
-    Serial.println(analogValue4);
-
-    Vout_4 = ( 5.0 / 4095 ) * analogValue4; //แปลงค่าจากดิจิตอลเป็นอนาลอก
-    Serial.print("Vout_4(V) = ");
-    Serial.println(Vout_4);
-
-    Vout_sccm_FS_4 = ( FS4 / 5 ) * Vout_4; //กำหนด FS2 = 100 เปลี่ยนหน่วยFull Scale จาก V เป็น sccm
-    Serial.print("Vout_sccm_FS_4 = ");
-    Serial.println(Vout_sccm_FS_4);
-
-    FSN4 = ( GF4 / GM4 ) * FS4  ; //คิดFull Scale ค่าใหม่
-    Serial.print("FSN4(sccm) = ");
-    Serial.println(FSN4);
-
-    Flowout4 = ( SP4 / FSN4 ) * 5 ; // กำหนดให้ FS2 = 100 แปลงหน่วยจากsccmเป็น v
-    Serial.print("Flowrate_Vout4(V) = ");
-    Serial.println( Flowout4, 3);
-    Serial.println("_______________________________ END CHANNEL 4 _______________________________");
-
-    Serial.println("End ask.");
+    setText("t7", "STOP4");
+	
+    MassflowtoNextion4 = 0;
+    dtostrf(MassflowtoNextion4, 4, 2, sbuff4);
+    Serial.print("sbuff4 = ");
+    Serial.println(sbuff4);
+    setText("t3", sbuff4);
   }
 }
 //##############################################################################
@@ -1238,13 +1500,13 @@ void resetNextionEtxCome()
 }
 
 /*//##############################################################################
-//                             PROCEDURES OR FUNCTIONS
-//##############################################################################
-// ----------------------------------------------------------------------
-// Task Measure Flow 1
-// ----------------------------------------------------------------------
-void taskMeasureFlow1(boolean _flag)
-{
+  //                             PROCEDURES OR FUNCTIONS
+  //##############################################################################
+  // ----------------------------------------------------------------------
+  // Task Measure Flow 1
+  // ----------------------------------------------------------------------
+  void taskMeasureFlow1(boolean _flag)
+  {
   if (_flag)
   {
     taskADC1_CNT++;
@@ -1252,27 +1514,32 @@ void taskMeasureFlow1(boolean _flag)
     {
       taskADC1_CNT = 0; // Reset counter <--
 	  analogValue1 = analogRead(A2);
-	  
-float V;	  
 
-	  V = ( 5.0 / 4095 ) * analogValue1;
-      Serial.print("Vout(V) = ");
-      Serial.println(V);
-	  
-float VtoSccm	;  
-      
-	  VtoSccm = ( SP1 / 5.0 ) * V;
-	  Serial.print("VtoSccm = ");
-      Serial.println(VtoSccm);
-    
+  float V_ch1;
+
+	  V_ch1 = ( 5.0 / 1023 ) * analogValue1;
+      Serial.print("Vout(V_ch1) = ");
+      Serial.println(V_ch1);
+
+  float VtoSccm_1;
+
+	  VtoSccm_1 = ( SP1 / 5.0 ) * V_ch1;
+	  Serial.print("VtoSccm_1 = ");
+      Serial.println(VtoSccm_1);
+	  delay(100);
+
+	  dtostrf(MassflowtoNextion1,4,2,sbuff1);
+      Serial.print("sbuff1 = ");
+      Serial.println(sbuff1);
+	  setText("t0", sbuff1);
+
 	 // Read ADC 1
-	 //	ADC1 convert to sccm 
-	 // SetText display 
-	 
-      
+	 //	ADC1 convert to sccm
+	 // SetText display
+
     }
   }
-}*/
+  }*/
 
 // ----------------------------------------------------------------------
 // Task Blink
