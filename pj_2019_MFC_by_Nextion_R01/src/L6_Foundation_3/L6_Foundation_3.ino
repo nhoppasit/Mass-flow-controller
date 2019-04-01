@@ -94,12 +94,13 @@ boolean       tick_state;  //แสดงสถานะที่เป็นเ
 // TASK BLINK
 // ----------------------------------------------------------------------
 #define TIME_BLINK     1000 // ms = 100 * 10ms ตั้งเวลา
-int MY_TIME_BLINK = 1000; //หน่วยความจำ
+//int MY_TIME_BLINK = 1000; //หน่วยความจำ
+int MY_TIME_BLINK = 500;
 boolean Blink = false; // ใช้จำสถานะไฟกระพริบ
 int taskBlink_CNT; // จำเวลา [1,20] / C++[0,19]
 
-//int TIME_ADC1 = 250;
-//int taskADC1_CNT;
+int TIME_ADC1 = 500;
+int taskADC1_CNT;
 // ----------------------------------------------------------------------
 // Serial communication variables
 // ----------------------------------------------------------------------
@@ -124,10 +125,6 @@ int inum;
 char number1[100] ;
 int len_num1;
 int inum1;
-
-//char seting[100] = {0};
-//int len_set;
-//int iset;
 
 // ----------------------------------------------------------------------
 // Nextion variables ch2
@@ -253,7 +250,7 @@ void loop()
   // TIME-BASED MISSIONS
   // ............................
   taskBlink(tick_state);
-  // taskMeasureFlow1(tick_state);
+  taskMeasureFlow1(tick_state);
 
   // ............................
   // NEXTION MISSIONS
@@ -276,6 +273,14 @@ void loop()
   checkSTOP2(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x08 && dataBuff[2] == 0x00); // 65 16 08 00 FF FF FF ปุ่ม stop
   checkSTOP3(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x09 && dataBuff[2] == 0x00); // 65 16 09 00 FF FF FF ปุ่ม stop
   checkSTOP4(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0A && dataBuff[2] == 0x00); // 65 16 0A 00 FF FF FF ปุ่ม stop
+  
+  // ............................
+  // EDIT 
+  // ............................
+  //editor1(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0F && dataBuff[2] == 0x00); // 65 16 0F 00 FF FF FF ปุ่ม stop
+  //editor2(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x10 && dataBuff[2] == 0x00); // 65 16 10 00 FF FF FF ปุ่ม stop
+  //editor3(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x11 && dataBuff[2] == 0x00); // 65 16 11 00 FF FF FF ปุ่ม stop
+  //editor4(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x12 && dataBuff[2] == 0x00); // 65 16 12 00 FF FF FF ปุ่ม stop
 
   resetNextionEtxCome();
 }
@@ -296,6 +301,7 @@ void checkChannel1(boolean _flag)
     len_buff1 = getText("t22", buffer1, sizeof(buffer1));
     callPage("11");
     memset(number, 0, sizeof(number));
+	memset(number1, 0, sizeof(number1));
     len_num = getText("t111", number, sizeof(number));
     len_num1 = getText("t112", number1, sizeof(number1));
     
@@ -437,6 +443,7 @@ void checkChannel1(boolean _flag)
     Serial.print("FS1 = ");
     Serial.println(FS1);
 
+	SP1 = 0;
     SP1 = atof(number1);
     Serial.print("SP1 = ");
     Serial.println(SP1);
@@ -480,9 +487,9 @@ void checkChannel1(boolean _flag)
       Serial.println(FSN1);
 
       SPN1 = ( FSN1 / FS1 ) * SP1 ;
-      if (SPN1 > FS1)
+      if (SPN1 > FSN1)
       {
-        SPN1 = FS1;
+        SPN1 = FSN1;
       }
       Serial.print("SPN1 = ");
       Serial.println(SPN1);
@@ -519,18 +526,20 @@ void checkChannel1(boolean _flag)
       // ----------------------------------------------------------------------
       // Part Show Value 1
       // ----------------------------------------------------------------------
-      V_ch1 = ( 5.0 / 1023 ) * analogValue1;
+	  analogValue1 = analogRead(A2);
+	  Serial.print("analogValue1 = ");
+      Serial.println(analogValue1);
+	  
+      V_ch1 = ( 5.0 / 1023 ) * analogValue1;	 
       Serial.print("Vout(V_ch1) = ");
       Serial.println(V_ch1);
 
-      VtoSccm_1 = ( SP1 / 5.0 ) * V_ch1;
+      VtoSccm_1 = ( FSN1 / 5.0 ) * V_ch1;
       Serial.print("VtoSccm_1 = ");
       Serial.println(VtoSccm_1);
       delay(100);
 
-      MassflowtoNextion1 = 20;
-      //dtostrf(MassflowtoNextion1, 4, 2, sbuff1);
-	  dtostrf(SP1, 4, 2, sbuff1);
+      dtostrf( VtoSccm_1, 4, 2, sbuff1);
       Serial.print("sbuff1 = ");
       Serial.println(sbuff1);
       setText("t0", sbuff1);
@@ -554,6 +563,7 @@ void checkSTOP1(boolean _flag)
     setText("t0", sbuff1);
   }
 }
+
 void checkChannel2(boolean _flag)
 {
   if (_flag)
@@ -571,6 +581,7 @@ void checkChannel2(boolean _flag)
     len_buff3 = getText("t32", buffer3, sizeof(buffer3));
     callPage("12");
     memset(number2, 0, sizeof(number2));
+	memset(number3, 0, sizeof(number3));
     len_num2 = getText("t121", number2, sizeof(number2));
     len_num3 = getText("t122", number3, sizeof(number3));
 
@@ -758,9 +769,9 @@ void checkChannel2(boolean _flag)
       Serial.println(FSN2);
 
       SPN2 = ( FSN2 / FS2 ) * SP2 ;
-      if (SPN2 > FS2)
+      if (SPN2 > FSN2)
       {
-        SPN2 = FS2;
+        SPN2 = FSN2;
       }
       Serial.print("SPN2 = ");
       Serial.println(SPN2);
@@ -802,14 +813,12 @@ void checkChannel2(boolean _flag)
       Serial.print("Vout(V_ch2) = ");
       Serial.println(V_ch2);
 
-      VtoSccm_2 = ( SP2 / 5.0 ) * V_ch2;
+      VtoSccm_2 = ( FSN2 / 5.0 ) * V_ch2;
       Serial.print("VtoSccm_2 = ");
       Serial.println(VtoSccm_2);
       delay(100);
 
-      MassflowtoNextion2 = 20;
-      //dtostrf(MassflowtoNextion2, 4, 2, sbuff2);
-	  dtostrf(SP2, 4, 2, sbuff2);
+      dtostrf( VtoSccm_2, 4, 2, sbuff2);
       Serial.print("sbuff2 = ");
       Serial.println(sbuff2);
       setText("t1", sbuff2);
@@ -850,6 +859,7 @@ void checkChannel3(boolean _flag)
     len_buff5 = getText("t42", buffer5, sizeof(buffer5));
     callPage("13");
     memset(number4, 0, sizeof(number4));
+	memset(number5, 0, sizeof(number5));
     len_num4 = getText("t131", number4, sizeof(number4));
     len_num5 = getText("t132", number5, sizeof(number5));
 
@@ -1033,9 +1043,9 @@ void checkChannel3(boolean _flag)
       Serial.println(FSN3);
 
       SPN3 = ( FSN3 / FS3 ) * SP3 ;
-      if (SPN3 > FS3)
+      if (SPN3 > FSN3)
       {
-        SPN3 = FS3;
+        SPN3 = FSN3;
       }
       Serial.print("SPN3 = ");
       Serial.println(SPN3);
@@ -1076,14 +1086,12 @@ void checkChannel3(boolean _flag)
       Serial.print("Vout(V_ch3) = ");
       Serial.println(V_ch3);
 
-      VtoSccm_3 = ( SP3 / 5.0 ) * V_ch3;
+      VtoSccm_3 = ( FSN3 / 5.0 ) * V_ch3;
       Serial.print("VtoSccm_3 = ");
       Serial.println(VtoSccm_3);
       delay(100);
 
-      MassflowtoNextion3 = 20;
-     // dtostrf(MassflowtoNextion3, 4, 2, sbuff3);
-	  dtostrf(SP3, 4, 2, sbuff3);
+      dtostrf( VtoSccm_3, 4, 2, sbuff3);
       Serial.print("sbuff3 = ");
       Serial.println(sbuff3);
       setText("t2", sbuff3);
@@ -1124,6 +1132,7 @@ void checkChannel4(boolean _flag)
     len_buff7 = getText("t52", buffer7, sizeof(buffer7));
     callPage("14");
     memset(number6, 0, sizeof(number6));
+	memset(number7, 0, sizeof(number7));
     len_num6 = getText("t141", number6, sizeof(number6));
     len_num7 = getText("t142", number7, sizeof(number7));
 
@@ -1308,9 +1317,9 @@ void checkChannel4(boolean _flag)
       Serial.println(FSN4);
 
       SPN4 = ( FSN4 / FS4 ) * SP4 ;
-      if (SPN4 > FS4)
+      if (SPN4 > FSN4)
       {
-        SPN4 = FS4;
+        SPN4 = FSN4;
       }
       Serial.print("SPN4 = ");
       Serial.println(SPN4);
@@ -1352,14 +1361,12 @@ void checkChannel4(boolean _flag)
       Serial.print("Vout(V_ch4) = ");
       Serial.println(V_ch4);
 
-      VtoSccm_4 = ( SP4 / 5.0 ) * V_ch4;
+      VtoSccm_4 = ( FSN4 / 5.0 ) * V_ch4;
       Serial.print("VtoSccm_4 = ");
       Serial.println(VtoSccm_4);
       delay(100);
 
-      MassflowtoNextion4 = 20;
-      //dtostrf(MassflowtoNextion4, 4, 2, sbuff4);
-	  dtostrf(SP4, 4, 2, sbuff4);
+      dtostrf( VtoSccm_4, 4, 2, sbuff4);
       Serial.print("sbuff4 = ");
       Serial.println(sbuff4);
       setText("t3", sbuff4);
@@ -1499,14 +1506,14 @@ void resetNextionEtxCome()
   }
 }
 
-/*//##############################################################################
-  //                             PROCEDURES OR FUNCTIONS
-  //##############################################################################
-  // ----------------------------------------------------------------------
-  // Task Measure Flow 1
-  // ----------------------------------------------------------------------
-  void taskMeasureFlow1(boolean _flag)
-  {
+//##############################################################################
+ //                             PROCEDURES OR FUNCTIONS
+ //##############################################################################
+ // ----------------------------------------------------------------------
+ // Task Measure Flow 1
+ // ----------------------------------------------------------------------
+ void taskMeasureFlow1(boolean _flag)
+ {
   if (_flag)
   {
     taskADC1_CNT++;
@@ -1515,23 +1522,23 @@ void resetNextionEtxCome()
       taskADC1_CNT = 0; // Reset counter <--
 	  analogValue1 = analogRead(A2);
 
-  float V_ch1;
-
-	  V_ch1 = ( 5.0 / 1023 ) * analogValue1;
+	  analogValue1 = analogRead(A2);
+	  Serial.print("analogValue1 = ");
+      Serial.println(analogValue1);
+	  
+      V_ch1 = ( 5.0 / 1023 ) * analogValue1;	 
       Serial.print("Vout(V_ch1) = ");
       Serial.println(V_ch1);
 
-  float VtoSccm_1;
-
-	  VtoSccm_1 = ( SP1 / 5.0 ) * V_ch1;
-	  Serial.print("VtoSccm_1 = ");
+      VtoSccm_1 = ( FSN1 / 5.0 ) * V_ch1;
+      Serial.print("VtoSccm_1 = ");
       Serial.println(VtoSccm_1);
-	  delay(100);
+      delay(100);
 
-	  dtostrf(MassflowtoNextion1,4,2,sbuff1);
+      dtostrf( VtoSccm_1, 4, 2, sbuff1);
       Serial.print("sbuff1 = ");
       Serial.println(sbuff1);
-	  setText("t0", sbuff1);
+      setText("t0", sbuff1);
 
 	 // Read ADC 1
 	 //	ADC1 convert to sccm
@@ -1539,7 +1546,7 @@ void resetNextionEtxCome()
 
     }
   }
-  }*/
+  }
 
 // ----------------------------------------------------------------------
 // Task Blink
