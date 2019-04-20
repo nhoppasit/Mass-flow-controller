@@ -1,4 +1,4 @@
-#define PRINT_NEXTION_COMMU 1
+#define PRINT_NEXTION_COMMU 0
 #define PRINT_DEBUG 1
 
 //##############################################################################
@@ -7,13 +7,19 @@
 
 #include "NextionHardware.h";
 #include "NextionText.h";
+#include "NextionNumber.h";
 
 #include "MCP4922.h"
 #include <SPI.h>
 
-MCP4922 DAC_A(51, 52, 34, 5); // (MOSI,SCK,CS,LDAC) define Connections for MEGA_board
-MCP4922 DAC_B(51, 52, 53, 5); // (MOSI,SCK,CS,LDAC) define Connections for MEGA_board
+MCP4922 DAC_A(51, 52, 34, 2); // (MOSI/SDI,SCK,CS,LDAC) define Connections for MEGA_board
+MCP4922 DAC_B(51, 52, 53, 2); // (MOSI/SDI,SCK,CS,LDAC) define Connections for MEGA_board
 
+int shutdown = 3;
+int led_CNT;    
+float led_val;
+int led = 12;
+boolean ledd = false;
 // ----------------------------------------------------------------------
 // Channel 1
 // ----------------------------------------------------------------------
@@ -31,6 +37,7 @@ float GM1; // Gas of massflow 1
 float A;
 float B;
 int analogValue1;
+int analogValue11;
 
 // ----------------------------------------------------------------------
 // Channel 2
@@ -48,6 +55,7 @@ float GM2; // Gas of massflow 2
 float C;
 float D;
 int analogValue2;
+int analogValue22;
 
 // ----------------------------------------------------------------------
 // Channel 3
@@ -65,6 +73,7 @@ float GM3; // Gas of massflow 3
 float E;
 float F;
 int analogValue3;
+int analogValue33;
 
 // ----------------------------------------------------------------------
 // Channel 4
@@ -82,6 +91,7 @@ float GM4; // Gas of massflow 4
 float G;
 float H;
 int analogValue4;
+int analogValue44;
 
 // ----------------------------------------------------------------------
 // CPU tick
@@ -99,9 +109,9 @@ int MY_TIME_BLINK = 500;
 boolean Blink = false; // ใช้จำสถานะไฟกระพริบ
 int taskBlink_CNT; // จำเวลา [1,20] / C++[0,19]
 
-int TIME_ADC1 = 500;
-int taskADC1_CNT;
-boolean ADC1 = false;
+//int TIME_ADC1 = 500;
+//int taskADC1_CNT;
+//boolean ADC1 = false;
 // ----------------------------------------------------------------------
 // Serial communication variables
 // ----------------------------------------------------------------------
@@ -109,6 +119,12 @@ char incomingChar;//หน่วยความจำ
 int byteIdx;
 boolean nextionStxCome, nextionEtxCome;
 byte dataBuff[6];
+
+//char buf[100] = {0};
+//int len_buf;  // add
+//int ibuf;  // add
+uint32_t numb = 0 ;
+//NexNumber n0 = NexNumber(0, 4, "n0");
 
 // ----------------------------------------------------------------------
 // Nextion variables ch1
@@ -208,26 +224,40 @@ String value4;
 // ----------------------------------------------------------------------
 // Select Voltage
 // ----------------------------------------------------------------------
-int pin = 10;
-//int in = 7; // Coil
-int val;
+int pin1_24v = 4;
+int pin2_24v = 5;
+int pin3_24v = 6;
+int pin4_24v = 7;
+
+
 //##############################################################################
 //                             SETUP
 //##############################################################################
 void setup() {
-
+  
   systemInit();
 
   Serial.print("Software started. Hello PC.");
-
+  
   pinMode(13, OUTPUT);
   digitalWrite(13, LOW);
 
   Serial.begin(115200);
+  pinMode(led, OUTPUT);
   SPI.begin();
   
-  pinMode(pin,OUTPUT);
- // pinMode(in,INPUT);
+  //pinMode(shutdown, OUTPUT);
+  //digitalWrite(shutdown,)
+  //pinMode(pin1_12v,OUTPUT); 
+ // pinMode(pin2_12v,OUTPUT);
+  //pinMode(pin3_12v,OUTPUT);
+  //pinMode(pin4_12v,OUTPUT);
+  
+  pinMode(pin1_24v,OUTPUT);
+  pinMode(pin2_24v,OUTPUT);
+  pinMode(pin3_24v,OUTPUT);
+  pinMode(pin4_24v,OUTPUT);
+ 
 }
 void voltage1(unsigned int A)
 {
@@ -253,53 +283,192 @@ void loop()
   // ............................
   // LISTEN & TICK
   // ............................
-  listenNextion();
+  listenNextion();  
   tick();
 
   // ............................
   // TIME-BASED MISSIONS
   // ............................
   taskBlink(tick_state);
-  taskMeasureFlow1(tick_state && ADC1);
-
+ // taskMeasureFlow1(tick_state && ADC1);
+checkstart(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x00 && dataBuff[1] == 0x02 && dataBuff[2] == 0x01); // 65 00 02 01 FF FF FF ปุ่ม edit
   // ............................
   // NEXTION MISSIONS
   // ............................
   //taskIncBlinkPeriod(nextionEtxCome && dataBuff[0] == 0x01 && dataBuff[1] == 0x02 && dataBuff[2] == 0x00);
   //taskDecBlinkPeriod(nextionEtxCome && dataBuff[0] == 0x02 && dataBuff[1] == 0x02 && dataBuff[2] == 0x00);
-  voltagecheck1(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x1F && dataBuff[1] == 0x02 && dataBuff[2] == 0x01); // 65 1F 02 01 FF FF FF
-  voltagecheck2(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x1F && dataBuff[1] == 0x03 && dataBuff[2] == 0x01); // 65 1F 03 01 FF FF FF
+  Check12Voltch1(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x1F && dataBuff[1] == 0x02 && dataBuff[2] == 0x01); // 65 1F 02 01 FF FF FF set relay 12v ch1
+  Check12Voltch2(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x20 && dataBuff[1] == 0x02 && dataBuff[2] == 0x01); // 65 20 02 01 FF FF FF set relay 12v ch2
+  Check12Voltch3(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x21 && dataBuff[1] == 0x02 && dataBuff[2] == 0x01); // 65 21 02 01 FF FF FF set relay 12v ch3
+  Check12Voltch4(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x22 && dataBuff[1] == 0x02 && dataBuff[2] == 0x01); // 65 22 02 01 FF FF FF set relay 12v ch4
+ 
+  Check24Voltch1(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x1F && dataBuff[1] == 0x03 && dataBuff[2] == 0x01); // 65 1F 03 01 FF FF FF set relay 24v ch1
+  Check24Voltch2(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x20 && dataBuff[1] == 0x03 && dataBuff[2] == 0x01); // 65 20 03 01 FF FF FF set relay 24v ch2
+  Check24Voltch3(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x21 && dataBuff[1] == 0x03 && dataBuff[2] == 0x01); // 65 21 03 01 FF FF FF set relay 24v ch3
+  Check24Voltch4(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x22 && dataBuff[1] == 0x03 && dataBuff[2] == 0x01); // 65 22 03 01 FF FF FF set relay 24v ch4
+  
   // ............................
   // CHECK STRAT
   // ............................
-  checkChannel1(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0B && dataBuff[2] == 0x00); // 65 16 0B 00 FF FF FF ปุ่ม start ตรวจสอบค่า FullScale and SetPoint
-  checkChannel2(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0C && dataBuff[2] == 0x00); // 65 16 0C 00 FF FF FF ปุ่ม start ตรวจสอบค่า FullScale and SetPoint
-  checkChannel3(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0D && dataBuff[2] == 0x00); // 65 16 0D 00 FF FF FF ปุ่ม start ตรวจสอบค่า FullScale and SetPoint
-  checkChannel4(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0E && dataBuff[2] == 0x00); // 65 16 0E 00 FF FF FF ปุ่ม start ตรวจสอบค่า FullScale and SetPoint
+  checkChannel1(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x23 && dataBuff[1] == 0x02 && dataBuff[2] == 0x01); // 65 16 0D 01 FF FF FF ปุ่ม start ตรวจสอบค่า FullScale and SetPoint
+  checkChannel2(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0F && dataBuff[2] == 0x01); // 65 16 0F 01 FF FF FF ปุ่ม start ตรวจสอบค่า FullScale and SetPoint
+  checkChannel3(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x11 && dataBuff[2] == 0x01); // 65 16 11 01 FF FF FF ปุ่ม start ตรวจสอบค่า FullScale and SetPoint
+  checkChannel4(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x13 && dataBuff[2] == 0x01); // 65 16 13 01 FF FF FF ปุ่ม start ตรวจสอบค่า FullScale and SetPoint
 
   // ............................
   // CHECK STOP
   // ............................
-  checkSTOP1(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x07 && dataBuff[2] == 0x00); // 65 16 07 00 FF FF FF ปุ่ม stop
-  checkSTOP2(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x08 && dataBuff[2] == 0x00); // 65 16 08 00 FF FF FF ปุ่ม stop
-  checkSTOP3(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x09 && dataBuff[2] == 0x00); // 65 16 09 00 FF FF FF ปุ่ม stop
-  checkSTOP4(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0A && dataBuff[2] == 0x00); // 65 16 0A 00 FF FF FF ปุ่ม stop
-
+  checkSTOP1(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0C && dataBuff[2] == 0x01); // 65 16 0C 01 FF FF FF ปุ่ม stop
+  checkSTOP2(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0E && dataBuff[2] == 0x01); // 65 16 0E 01 FF FF FF ปุ่ม stop
+  checkSTOP3(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x10 && dataBuff[2] == 0x01); // 65 16 10 01 FF FF FF ปุ่ม stop
+  checkSTOP4(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x12 && dataBuff[2] == 0x01); // 65 16 12 01 FF FF FF ปุ่ม stop
+  
+  // ............................
+  // CHECK EDIT
+  // ............................
+  //checkEDIT1(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x0F && dataBuff[2] == 0x00); // 65 16 0F 00 FF FF FF ปุ่ม edit
+  //checkEDIT2(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x01 && dataBuff[2] == 0x00); // 65 16 01 00 FF FF FF ปุ่ม edit
+  //checkEDIT3(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x11 && dataBuff[2] == 0x00); // 65 16 11 00 FF FF FF ปุ่ม edit
+  //checkEDIT4(nextionStxCome && nextionEtxCome && dataBuff[0] == 0x16 && dataBuff[1] == 0x12 && dataBuff[2] == 0x00); // 65 16 12 00 FF FF FF ปุ่ม edit
+  
+  
   
   resetNextionEtxCome();
 }
-void voltagecheck1 (boolean _flag) 
+
+void checkstart (boolean _flag) 
 {
 	if (_flag)
 	{
-		digitalWrite(pin, HIGH);
+	//callPage("0");
+   // memset(buf, 0, sizeof(numb));
+	getValue("n0", numb)
+	utoa(numb, buf, 10);	 
+	//n0.getValue(&numb); 
+    Serial.println(numb);
+ 
+    //getValue("n0", buf);
+	//utoa(numb, buf, 10);
+	//n0.getValue(sizeof(numb));
+	//getValue(numb);
+/* 
+#if PRINT_DEBUG
+    Serial.print("Buf[] = ");
+    for (ibuf = 0; ibuf < len_buf; ibuf++)
+    {
+      Serial.print(buf[ibuf]);
+    }
+    Serial.println();
+#endif
+       led_val = atof(buf);
+		Serial.print("led_val = ");
+		Serial.println(led_val);
+		
+ int timer = led_val * 1000;
+ 
+ digitalWrite(led,HIGH);
+ Serial.println("led start ");
+ delay(timer);
+ digitalWrite(led,LOW);
+ Serial.println("led shut down ");
+
+/ for (led_CNT = 0; led_CNT < led_val; led_CNT++)	
+	Serial.print("led_CNT = ");
+	Serial.println(led_CNT); 
+{
+	digitalWrite(led,HIGH);
+	delay(1000);
+	digitalWrite(led,LOW);
+}
+
+	
+    led_CNT++;
+	 if(led_val = led_CNT)
+	 {
+		 led_CNT =0;
+		 if (!ledd)
+		 {
+			 digitalWrite(led,HIGH);
+			 ledd = true;
+		 }
+		 else
+		 {
+			 digitalWrite(led,LOW);
+			 ledd = false;
+		 }
+	 }*/
+	
 	}
 }
-void voltagecheck2 (boolean _flag) 
+// ----------------------------------------------------------------------
+//  Check 12 Voltage
+// ----------------------------------------------------------------------
+ void Check12Voltch1 (boolean _flag) 
 {
 	if (_flag)
 	{
-		digitalWrite(pin, LOW);		
+		digitalWrite(pin1_24v, LOW);
+		//digitalWrite(pin1_12v, HIGH);
+	}
+}
+void Check12Voltch2 (boolean _flag) 
+{
+	if (_flag)
+	{
+		digitalWrite(pin2_24v, LOW);
+		//digitalWrite(pin2_12v, HIGH);
+	}
+}
+void Check12Voltch3 (boolean _flag) 
+{
+	if (_flag)
+	{
+		digitalWrite(pin3_24v, LOW);
+		//digitalWrite(pin3_12v, HIGH);
+	}
+}
+void Check12Voltch4 (boolean _flag) 
+{
+	if (_flag)
+	{
+		digitalWrite(pin4_24v, LOW);
+		//digitalWrite(pin4_12v, HIGH);
+	}
+}
+
+// ----------------------------------------------------------------------
+// Check 24 Voltage
+// ----------------------------------------------------------------------
+void Check24Voltch1 (boolean _flag) 
+{
+	if (_flag)
+	{
+		//digitalWrite(pin1_12v, LOW);     
+		digitalWrite(pin1_24v, HIGH);
+	}
+}
+void Check24Voltch2 (boolean _flag) 
+{
+	if (_flag)
+	{
+		//digitalWrite(pin2_12v, LOW);		
+		digitalWrite(pin2_24v, HIGH);
+	}
+}
+void Check24Voltch3 (boolean _flag) 
+{
+	if (_flag)
+	{
+		//digitalWrite(pin3_12v, LOW);	
+		digitalWrite(pin3_24v, HIGH);
+	}
+}
+void Check24Voltch4 (boolean _flag) 
+{
+	if (_flag)
+	{
+		//digitalWrite(pin4_12v, LOW);	
+		digitalWrite(pin4_24v, HIGH);
 	}
 }
 void checkChannel1(boolean _flag)
@@ -322,7 +491,8 @@ void checkChannel1(boolean _flag)
     memset(number1, 0, sizeof(number1));
     len_num = getText("t111", number, sizeof(number));
     len_num1 = getText("t112", number1, sizeof(number1));
-
+ 
+	
     // ----------------------------------------------------------------------
     // Channel 1
     // ----------------------------------------------------------------------
@@ -547,15 +717,15 @@ void checkChannel1(boolean _flag)
       // ----------------------------------------------------------------------
       // Part Show Value 1
       // ----------------------------------------------------------------------
-      analogValue1 = analogRead(A2);
-      Serial.print("analogValue1 = ");
-      Serial.println(analogValue1);
+      analogValue11 = analogRead(A8);
+      Serial.print("analogValue11 = ");
+      Serial.println(analogValue11);
 
-      V_ch1 = ( 5.0 / 1023 ) * analogValue1;	  
+      V_ch1 = ( 5.0 / 1023 ) * analogValue11;	  
       Serial.print("Vout(V_ch1) = ");
       Serial.println(V_ch1);
 
-      VtoSccm_1 = ( FSN1 / 5.0 ) * V_ch1;
+      VtoSccm_1 = ( FS1 / 5.0 ) * V_ch1;
       Serial.print("VtoSccm_1 = ");
       Serial.println(VtoSccm_1);
       delay(100);
@@ -565,7 +735,33 @@ void checkChannel1(boolean _flag)
       Serial.println(sbuff1);
       setText("t0", sbuff1);
 	  
-	  ADC1 = true ;
+	 // ADC1 = true ;
+	 callPage("35");
+  /*  memset(buf, 0, sizeof(buf));
+    len_buf = getText("t0", buf, sizeof(buf));
+	
+
+#if PRINT_DEBUG
+    Serial.print("Buf[] = ");
+    for (ibuf = 0; ibuf < len_buf; ibuf++)
+    {
+      Serial.print(buf[ibuf]);
+    }
+    Serial.println();
+#endif
+        led_val = atof(buf);
+		Serial.print("led_val = ");
+		Serial.println(led_val);
+		
+ int timer = led_val * 1000;
+ 
+ digitalWrite(led,HIGH);
+ Serial.println("led start ");
+ delay(timer);
+ digitalWrite(led,LOW);
+ Serial.println("led shut down ");
+ A = 0;
+ voltage1(A);*/
     }
   }
 }
@@ -573,8 +769,8 @@ void checkSTOP1(boolean _flag)
 {
   if (_flag)
   {
-	  Serial.print("Stop enter ");
-	ADC1 = false;
+	 // Serial.print("Stop enter ");
+//	ADC1 = false;
     A = 0;
     voltage1(A); //Set DAC voltage
     Serial.print("A = ");
@@ -585,13 +781,17 @@ void checkSTOP1(boolean _flag)
     dtostrf(MassflowtoNextion1, 4, 2, sbuff1);
     Serial.print("sbuff1 = ");
     Serial.println(sbuff1);
-    setText("t0", sbuff1);
-	
-	
-	
+    setText("t0", sbuff1);	
   }
 }
-
+/*void checkEDIT1(boolean _flag)
+{
+	if(_flag)
+	{
+		digitalWrite(pin1_24v, LOW);
+		//digitalWrite(pin1_12v, LOW);
+	}
+}*/
 void checkChannel2(boolean _flag)
 {
   if (_flag)
@@ -839,11 +1039,15 @@ void checkChannel2(boolean _flag)
       // ----------------------------------------------------------------------
       // Part Show Value 2
       // ----------------------------------------------------------------------
-      V_ch2 = ( 5.0 / 1023 ) * analogValue2;
+	  analogValue22 = analogRead(A9);
+      Serial.print("analogValue11 = ");
+      Serial.println(analogValue11);
+	  
+      V_ch2 = ( 5.0 / 1023 ) * analogValue22;
       Serial.print("Vout(V_ch2) = ");
       Serial.println(V_ch2);
 
-      VtoSccm_2 = ( FSN2 / 5.0 ) * V_ch2;
+      VtoSccm_2 = ( FS2 / 5.0 ) * V_ch2;
       Serial.print("VtoSccm_2 = ");
       Serial.println(VtoSccm_2);
       delay(100);
@@ -872,6 +1076,14 @@ void checkSTOP2(boolean _flag)
     setText("t1", sbuff2);
   }
 }
+/*void checkEDIT2(boolean _flag)
+{
+	if(_flag)
+	{
+		digitalWrite(pin2_24v, LOW);
+		//digitalWrite(pin2_12v, LOW);
+	}
+}*/
 void checkChannel3(boolean _flag)
 {
   if (_flag)
@@ -1114,11 +1326,15 @@ void checkChannel3(boolean _flag)
       // ----------------------------------------------------------------------
       // Part Show Value 3
       // ----------------------------------------------------------------------
-      V_ch3 = ( 5.0 / 1023 ) * analogValue3;
+	  analogValue33 = analogRead(A10);
+      Serial.print("analogValue33 = ");
+      Serial.println(analogValue33); 
+	  
+      V_ch3 = ( 5.0 / 1023 ) * analogValue33;
       Serial.print("Vout(V_ch3) = ");
       Serial.println(V_ch3);
 
-      VtoSccm_3 = ( FSN3 / 5.0 ) * V_ch3;
+      VtoSccm_3 = ( FS3 / 5.0 ) * V_ch3;
       Serial.print("VtoSccm_3 = ");
       Serial.println(VtoSccm_3);
       delay(100);
@@ -1147,6 +1363,14 @@ void checkSTOP3(boolean _flag)
     setText("t2", sbuff3);
   }
 }
+/*void checkEDIT3(boolean _flag)
+{
+	if(_flag)
+	{
+		digitalWrite(pin3_24v, LOW);
+		//digitalWrite(pin3_12v, LOW);
+	}
+}*/
 void checkChannel4(boolean _flag)
 {
   if (_flag)
@@ -1391,11 +1615,15 @@ void checkChannel4(boolean _flag)
       // ----------------------------------------------------------------------
       // Part Show Value 4
       // ----------------------------------------------------------------------
-      V_ch4 = ( 5.0 / 1023 ) * analogValue4;
+	  analogValue44 = analogRead(A11);
+      Serial.print("analogValue44 = ");
+      Serial.println(analogValue44); 
+	  
+      V_ch4 = ( 5.0 / 1023 ) * analogValue44;
       Serial.print("Vout(V_ch4) = ");
       Serial.println(V_ch4);
 
-      VtoSccm_4 = ( FSN4 / 5.0 ) * V_ch4;
+      VtoSccm_4 = ( FS4 / 5.0 ) * V_ch4;
       Serial.print("VtoSccm_4 = ");
       Serial.println(VtoSccm_4);
       delay(100);
@@ -1424,6 +1652,14 @@ void checkSTOP4(boolean _flag)
     setText("t3", sbuff4);
   }
 }
+/*void checkEDIT4(boolean _flag)
+{
+	if(_flag)
+	{
+		digitalWrite(pin4_24v, LOW);
+		//digitalWrite(pin4_12v, LOW);
+	}
+}*/
 //##############################################################################
 //                             PROCEDURES OR FUNCTIONS
 //##############################################################################
@@ -1462,7 +1698,7 @@ void listenNextion()
 
     if (incomingChar == 0x65) //ถ้าคีย์ข้อมูลค่า65
     {
-		ADC1 = false;
+		//ADC1 = false;
       nextionStxCome = true;     //nextionStxCome จะเป็นจริง (Stx=Start TexT)
       nextionEtxCome = false;    //nextionEtxCome จะเป็นเท็จ (Etx=End TexT)
       byteIdx = 0;
@@ -1533,11 +1769,11 @@ void resetNextionEtxCome()
 	int iii;
   if (nextionEtxCome)
   {
-	  nextionStxCome = false;
+	 // nextionStxCome = false;
     nextionEtxCome = false;
 	
-	for(iii=0;iii<6;iii++)
-		dataBuff[iii] = 0x00;
+	//for(iii=0;iii<6;iii++)
+		//dataBuff[iii] = 0x00;
 
 #if PRINT_NEXTION_COMMU
     Serial.println("Reset ETX. Command expired."); //ปริ๊นข้อความใน""
@@ -1546,7 +1782,7 @@ void resetNextionEtxCome()
   }
 }
 
-//##############################################################################
+/*//##############################################################################
   //                             PROCEDURES OR FUNCTIONS
   //##############################################################################
   // ----------------------------------------------------------------------
@@ -1587,7 +1823,7 @@ void resetNextionEtxCome()
     }
   }
  }
-
+*/
 // ----------------------------------------------------------------------
 // Task Blink
 // ----------------------------------------------------------------------

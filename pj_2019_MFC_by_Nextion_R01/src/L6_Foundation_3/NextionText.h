@@ -28,4 +28,5 @@ bool setText(const char *objName, const char *buffer);
  */
 bool callPage(const char *pageId);
 
+
 #endif /* #ifndef __NEXTEXT_H__ */
