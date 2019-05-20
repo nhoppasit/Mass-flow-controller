@@ -3842,6 +3842,9 @@ void tick()
 // ----------------------------------------------------------------------
 void listenNextion()
 {
+	long start;
+	uint32_t timeout = 1500;
+	
   if (Serial1.available())  //ได้รับข้อมูลจากสายarduino
   {
     incomingChar = Serial1.read(); //อ่านหน่วยความจำที่Serial1
@@ -3869,38 +3872,40 @@ void listenNextion()
       Serial.println();  //ให้เว้นบรรทัด
 #endif
 
-      return;
-    }
-
-    if (nextionStxCome) //ถ้าnextionStxComeเป็นจริง
-    {
-      dataBuff[byteIdx] = (byte)incomingChar; //ให้เก็บค่าของincomingCharมาใส่ที่dataBuff
-
-
-#if PRINT_NEXTION_COMMU
-      Serial.print("Data stored at byte IDX = ");
-      Serial.println(byteIdx, DEC);
-      Serial.println();
-#endif
-
-			if (byteIdx == 5) //ถ้ารับค่ามาเก็บ5ตัวให้ทำตามในวงเล็บต่อ
+			start = millis();
+			while (millis() - start <= timeout)
 			{
-				if (dataBuff[3] == 0xFF && dataBuff[4] == 0xFF && dataBuff[5] == 0xFF) //ถ้ารับรหัสFF FF FFกลับมาให้ทำตามในวงเล็บต่อ
+				while (Serial1.available())
 				{
-					nextionEtxCome = true; //ให้nextionEtxCome เป็นจริง
+					incomingChar = Serial1.read(); //อ่านหน่วยความจำที่Serial1
+					
+					dataBuff[byteIdx] = (byte)incomingChar; //ให้เก็บค่าของincomingCharมาใส่ที่dataBuff
 
 	#if PRINT_NEXTION_COMMU
-					Serial.println("ETX Come.........................");
+					Serial.print("Data stored at byte IDX = ");
+					Serial.println(byteIdx, DEC);
 					Serial.println();
 	#endif
+
+					if (byteIdx == 5) //ถ้ารับค่ามาเก็บ5ตัวให้ทำตามในวงเล็บต่อ
+					{
+						if (dataBuff[3] == 0xFF && dataBuff[4] == 0xFF && dataBuff[5] == 0xFF) //ถ้ารับรหัสFF FF FFกลับมาให้ทำตามในวงเล็บต่อ
+						{
+							nextionEtxCome = true; //ให้nextionEtxCome เป็นจริง
+
+	#if PRINT_NEXTION_COMMU
+							Serial.println("ETX Come.........................");
+							Serial.println();
+	#endif
+							return;
+						}
+					}
+					
+					byteIdx++;
+					if (5 < byteIdx) byteIdx = 5;
 				}
 			}
-		}
-    byteIdx++;
-    if (5 < byteIdx) byteIdx = 5;
-	
-	
-    
+    }					    
   }
 }
 // ----------------------------------------------------------------------
