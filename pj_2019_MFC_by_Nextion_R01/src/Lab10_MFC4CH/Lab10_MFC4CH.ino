@@ -3882,21 +3882,20 @@ void listenNextion()
       Serial.println(byteIdx, DEC);
       Serial.println();
 #endif
-   // }
 
-    if (byteIdx == 5) //ถ้ารับค่ามาเก็บ5ตัวให้ทำตามในวงเล็บต่อ
-    {
-      if (dataBuff[3] == 0xFF && dataBuff[4] == 0xFF && dataBuff[5] == 0xFF) //ถ้ารับรหัสFF FF FFกลับมาให้ทำตามในวงเล็บต่อ
-      {
-        nextionEtxCome = true; //ให้nextionEtxCome เป็นจริง
+			if (byteIdx == 5) //ถ้ารับค่ามาเก็บ5ตัวให้ทำตามในวงเล็บต่อ
+			{
+				if (dataBuff[3] == 0xFF && dataBuff[4] == 0xFF && dataBuff[5] == 0xFF) //ถ้ารับรหัสFF FF FFกลับมาให้ทำตามในวงเล็บต่อ
+				{
+					nextionEtxCome = true; //ให้nextionEtxCome เป็นจริง
 
-#if PRINT_NEXTION_COMMU
-        Serial.println("ETX Come.........................");
-        Serial.println();
-#endif
-      }
-    }
-  }
+	#if PRINT_NEXTION_COMMU
+					Serial.println("ETX Come.........................");
+					Serial.println();
+	#endif
+				}
+			}
+		}
     byteIdx++;
     if (5 < byteIdx) byteIdx = 5;
 	
